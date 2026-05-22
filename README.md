@@ -76,7 +76,7 @@ State fields include:
 
 The VPN Gate API can return a changing sample instead of a complete global list, so the public output is a passive rolling window, not just the latest response. Servers seen in the current collection are published as `active`; servers missed by the current scrape stay published as `missing` while their consecutive miss count is below `ACTIVE_MISS_LIMIT`. After that threshold they become `inactive` and are removed from `README.md`, `json/data.json`, and `configs/*.ovpn`. `PRUNE_MISS_LIMIT` controls when long-missing inactive entries are pruned from state entirely.
 
-State keeps the last known OpenVPN config only while a server is still publishable as `active` or `missing`. Once it becomes `inactive`, `state/servers.json` drops `openvpn_configdata_base64` and keeps only lifecycle metadata and hashes until the entry is pruned. This allows the rolling window to accumulate servers from random API samples without keeping stale configs forever.
+State keeps the last known OpenVPN config only while a server is still publishable as `active` or `missing`. Once it becomes `inactive`, `state/servers.json` drops `openvpn_configdata_base64` and keeps only lifecycle metadata and hashes until the entry is pruned. When available, the previous `json/data.json` snapshot is used to hydrate configs for older state files that did not store them. This allows the rolling window to accumulate servers from random API samples without keeping stale configs forever.
 
 The scraper does not actively test, ping, connect to, or speed-test VPN server IPs. Reported `ping` and `speed` values come from the VPN Gate API payload and should be treated as source-reported metadata.
 

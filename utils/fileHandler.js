@@ -80,6 +80,29 @@ class FileHandler {
         fs.writeFileSync(filePath, `${JSON.stringify(value, null, 4)}\n`, 'utf-8');
     }
 
+    loadPreviousPublishedConfigs() {
+        const data = this.readJsonFile(path.join(this.jsonDir, 'data.json'), null);
+        if (!data || !data.data || !Array.isArray(data.data.servers)) {
+            return {};
+        }
+
+        return data.data.servers.reduce((acc, server) => {
+            if (server.id && server.openvpn_configdata_base64) {
+                acc[server.id] = server.openvpn_configdata_base64;
+            }
+            return acc;
+        }, {});
+    }
+
+    hydrateStateServerConfigs(servers) {
+        const previousConfigs = this.loadPreviousPublishedConfigs();
+        Object.keys(servers).forEach(id => {
+            if (!servers[id].openvpn_configdata_base64 && previousConfigs[id]) {
+                servers[id].openvpn_configdata_base64 = previousConfigs[id];
+            }
+        });
+    }
+
     loadState() {
         const state = this.readJsonFile(this.statePath, null);
         if (!state || typeof state !== 'object') {
@@ -90,10 +113,13 @@ class FileHandler {
             };
         }
 
+        const servers = state.servers || {};
+        this.hydrateStateServerConfigs(servers);
+
         return {
             version: state.version || 1,
             generatedAt: state.generatedAt || null,
-            servers: state.servers || {}
+            servers
         };
     }
 

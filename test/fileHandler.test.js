@@ -81,4 +81,23 @@ result = handler.mergeVpnData([], {}, { totalRequests: 1 });
 assert.strictEqual(result.changes.pruned.length, 1);
 assert.strictEqual(result.statistics.stateServers, 0);
 
+const hydrateOutputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vpngate-hydrate-'));
+const hydrateHandler = new FileHandler({
+    outputDir: hydrateOutputDir,
+    statePath: path.join(hydrateOutputDir, 'state', 'servers.json'),
+    activeMissLimit: 2,
+    pruneMissLimit: 4
+});
+const cachedServer = createServer({ hostname: 'cached.example.test', ip: '203.0.113.11' });
+let cachedResult = hydrateHandler.mergeVpnData([cachedServer], { jp: 'Japan' }, { totalRequests: 1 });
+const cachedId = cachedResult.servers[0].id;
+hydrateHandler.saveData(cachedResult);
+delete cachedResult.state.servers[cachedId].openvpn_configdata_base64;
+hydrateHandler.saveState(cachedResult.state);
+
+cachedResult = hydrateHandler.mergeVpnData([], {}, { totalRequests: 1 });
+assert.strictEqual(cachedResult.servers.length, 1);
+assert.strictEqual(cachedResult.statistics.missingServers, 1);
+assert.ok(cachedResult.servers[0].openvpn_configdata_base64);
+
 console.log('fileHandler incremental state tests passed');

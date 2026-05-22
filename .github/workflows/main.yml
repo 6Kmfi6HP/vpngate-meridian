@@ -88,10 +88,11 @@ jobs:
 
       - name: Restore previous incremental state
         run: |
-          mkdir -p public/state
+          mkdir -p public/state public/json
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
             git fetch origin gh-pages:refs/remotes/origin/gh-pages --depth=1
             git show origin/gh-pages:state/servers.json > public/state/servers.json || true
+            git show origin/gh-pages:json/data.json > public/json/data.json || true
           fi
 
       - name: Collect VPN Gate data
