@@ -33,8 +33,8 @@ class FileHandler {
         this.configDir = path.join(this.outputDir, 'configs');
         this.jsonDir = path.join(this.outputDir, 'json');
         this.statePath = options.statePath || process.env.STATE_PATH || path.join(this.outputDir, 'state', 'servers.json');
-        this.activeMissLimit = parseInteger(options.activeMissLimit || process.env.ACTIVE_MISS_LIMIT, 3);
-        this.pruneMissLimit = parseInteger(options.pruneMissLimit || process.env.PRUNE_MISS_LIMIT, 24);
+        this.activeMissLimit = parseInteger(options.activeMissLimit || process.env.ACTIVE_MISS_LIMIT, 12);
+        this.pruneMissLimit = parseInteger(options.pruneMissLimit || process.env.PRUNE_MISS_LIMIT, 48);
 
         this.ensureDirectories();
     }
@@ -145,7 +145,9 @@ class FileHandler {
 
     buildStateServer(server) {
         const stateServer = Object.assign({}, server);
-        delete stateServer.openvpn_configdata_base64;
+        if (stateServer.status === 'inactive') {
+            delete stateServer.openvpn_configdata_base64;
+        }
         return stateServer;
     }
 
@@ -242,6 +244,9 @@ class FileHandler {
             }
 
             nextServers[id] = next;
+            if (status === 'missing' && next.openvpn_configdata_base64) {
+                publishedById.set(id, next);
+            }
         });
 
         Array.from(currentById.entries()).sort(([leftId], [rightId]) => leftId.localeCompare(rightId)).forEach(([id, server]) => {
@@ -298,12 +303,13 @@ class FileHandler {
 
         const stateServers = Object.keys(state.servers).map(id => state.servers[id]);
         const publishedServers = this.sortServers(Array.from(publishedById.values()));
+        const activeServers = stateServers.filter(server => server.status === 'active');
         const missingServers = stateServers.filter(server => server.status === 'missing');
         const inactiveServers = stateServers.filter(server => server.status === 'inactive');
         const countries = this.buildCountries(publishedServers, currentCountries);
 
         const statistics = Object.assign({}, collectionStats, {
-            activeServers: publishedServers.length,
+            activeServers: activeServers.length,
             publishedServers: publishedServers.length,
             stateServers: stateServers.length,
             missingServers: missingServers.length,

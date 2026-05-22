@@ -174,7 +174,8 @@ if (!isMainThread) {
             console.log(`Successful API calls: ${mergedResults.statistics.successfulRequests}`);
             console.log(`Collected server entries: ${mergedResults.statistics.collectedServerEntries}`);
             console.log(`Unique current servers: ${mergedResults.statistics.uniqueCurrentServers}`);
-            console.log(`Published active servers: ${mergedResults.statistics.publishedServers}`);
+            console.log(`Currently seen active servers: ${mergedResults.statistics.activeServers}`);
+            console.log(`Published servers: ${mergedResults.statistics.publishedServers}`);
             console.log(`Total servers kept in state: ${mergedResults.statistics.stateServers}`);
             console.log(`Missing servers kept in state: ${mergedResults.statistics.missingServers}`);
             console.log(`Inactive servers kept in state: ${mergedResults.statistics.inactiveServers}`);

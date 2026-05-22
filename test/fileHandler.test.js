@@ -30,7 +30,7 @@ assert.strictEqual(result.servers.length, 1);
 assert.strictEqual(result.statistics.activeServers, 1);
 assert.strictEqual(result.statistics.publishedServers, 1);
 assert.strictEqual(result.statistics.stateServers, 1);
-assert.strictEqual(result.state.servers[result.servers[0].id].openvpn_configdata_base64, undefined);
+assert.ok(result.state.servers[result.servers[0].id].openvpn_configdata_base64);
 handler.saveState(result.state);
 handler.saveVpnConfigs(result.servers);
 assert.ok(fs.existsSync(path.join(outputDir, result.servers[0].configPath)));
@@ -41,15 +41,16 @@ assert.strictEqual(result.servers.length, 1);
 handler.saveState(result.state);
 
 result = handler.mergeVpnData([], {}, { totalRequests: 1 });
-assert.strictEqual(result.servers.length, 0);
+assert.strictEqual(result.servers.length, 1);
 assert.strictEqual(result.statistics.activeServers, 0);
-assert.strictEqual(result.statistics.publishedServers, 0);
+assert.strictEqual(result.statistics.publishedServers, 1);
 assert.strictEqual(result.statistics.missingServers, 1);
 assert.strictEqual(result.statistics.inactiveServers, 0);
 assert.strictEqual(result.changes.missing.length, 1);
+assert.ok(result.state.servers[result.servers[0].id].openvpn_configdata_base64);
 handler.saveState(result.state);
 handler.saveVpnConfigs(result.servers);
-assert.strictEqual(fs.readdirSync(path.join(outputDir, 'configs')).filter(file => file.endsWith('.ovpn')).length, 0);
+assert.strictEqual(fs.readdirSync(path.join(outputDir, 'configs')).filter(file => file.endsWith('.ovpn')).length, 1);
 
 result = handler.mergeVpnData([createServer({ speed: '200000000' })], { jp: 'Japan' }, { totalRequests: 1 });
 assert.strictEqual(result.changes.recovered.length, 1);
@@ -57,15 +58,19 @@ assert.strictEqual(result.servers.length, 1);
 handler.saveState(result.state);
 
 result = handler.mergeVpnData([], {}, { totalRequests: 1 });
-assert.strictEqual(result.servers.length, 0);
+assert.strictEqual(result.servers.length, 1);
 assert.strictEqual(result.changes.missing.length, 1);
 assert.strictEqual(result.statistics.missingServers, 1);
 handler.saveState(result.state);
 
 result = handler.mergeVpnData([], {}, { totalRequests: 1 });
 assert.strictEqual(result.changes.inactive.length, 1);
+assert.strictEqual(result.servers.length, 0);
 assert.strictEqual(result.statistics.missingServers, 0);
 assert.strictEqual(result.statistics.inactiveServers, 1);
+assert.strictEqual(result.state.servers[Object.keys(result.state.servers)[0]].openvpn_configdata_base64, undefined);
+handler.saveVpnConfigs(result.servers);
+assert.strictEqual(fs.readdirSync(path.join(outputDir, 'configs')).filter(file => file.endsWith('.ovpn')).length, 0);
 handler.saveState(result.state);
 
 result = handler.mergeVpnData([], {}, { totalRequests: 1 });
