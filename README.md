@@ -22,8 +22,10 @@ By default the scraper performs 1500 VPN Gate API requests and writes generated 
 
 - `public/json/data.json`
 - `public/json/changes.json`
+- `public/json/data.maxmind.json` when MaxMind export is enabled
 - `public/state/servers.json`
 - `public/configs/*.ovpn`
+- `public/mihomo_openvpn.yaml` when MaxMind export is enabled
 - `public/README.md`
 
 For a smaller local smoke run:
@@ -40,6 +42,21 @@ $env:OUTPUT_DIR='tmp/smoke'
 $env:STATE_PATH='tmp/smoke/state/servers.json'
 npm start
 ```
+
+## MaxMind and mihomo Export
+
+The scraper output can be enriched with MaxMind GeoLite2 Country, City, and ASN databases, then exported as a mihomo OpenVPN provider file:
+
+```bash
+python -m pip install -r requirements-maxmind.txt
+python scripts/enrich_maxmind.py \
+  --input public/json/data.json \
+  --output public/json/data.maxmind.json \
+  --mihomo-output public/mihomo_openvpn.yaml \
+  --maxmind-dir maxmind
+```
+
+The MaxMind export is a metadata enrichment step. It does not replace `public/json/data.json`, does not change the incremental state model, and does not claim VPN/proxy risk scoring beyond the GeoLite2 fields available in the databases.
 
 ## Incremental Data Model
 
@@ -60,7 +77,7 @@ Servers are not removed immediately when one scrape misses them. `ACTIVE_MISS_LI
 
 ## GitHub Actions
 
-The workflow runs tests on push and pull request. On push, manual dispatch, and schedule it also runs a live scrape, restores the previous state from `gh-pages`, generates a new output snapshot, uploads it as an artifact, and force-pushes the generated files to `gh-pages`.
+The workflow runs Node.js and Python tests on push and pull request. On push, manual dispatch, and schedule it also runs a live scrape, restores the previous state from `gh-pages`, generates a new output snapshot, enriches it with MaxMind data, uploads it as an artifact, and force-pushes the generated files to `gh-pages`.
 
 Default CI behavior:
 
@@ -72,4 +89,6 @@ Default CI behavior:
 
 ```bash
 npm test
+python -m pip install -r requirements-maxmind.txt
+python -m pytest -q
 ```

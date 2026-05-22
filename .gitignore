@@ -40,6 +40,8 @@ tmp/
 temp/
 *.tmp
 *.bak
+maxmind/
+*.mmdb
 
 # Generated VPN Gate output is published from GitHub Actions to gh-pages.
 /public/
