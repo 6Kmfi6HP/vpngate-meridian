@@ -143,6 +143,12 @@ class FileHandler {
         };
     }
 
+    buildStateServer(server) {
+        const stateServer = Object.assign({}, server);
+        delete stateServer.openvpn_configdata_base64;
+        return stateServer;
+    }
+
     selectPreferredServer(current, candidate) {
         if (!current) {
             return candidate;
@@ -193,6 +199,7 @@ class FileHandler {
         const previousState = this.loadState();
         const previousServers = previousState.servers || {};
         const currentById = new Map();
+        const publishedById = new Map();
 
         currentServers.forEach(server => {
             const normalized = this.normalizeServer(server);
@@ -204,6 +211,7 @@ class FileHandler {
             added: [],
             updated: [],
             recovered: [],
+            missing: [],
             inactive: [],
             pruned: [],
             unchangedCount: 0
@@ -216,14 +224,16 @@ class FileHandler {
 
             const previous = previousServers[id];
             const missCount = (previous.missCount || 0) + 1;
-            const status = missCount >= this.activeMissLimit ? 'inactive' : 'active';
-            const next = Object.assign({}, previous, {
+            const status = missCount >= this.activeMissLimit ? 'inactive' : 'missing';
+            const next = this.buildStateServer(Object.assign({}, previous, {
                 missCount,
                 status
-            });
+            }));
 
             if (previous.status !== 'inactive' && status === 'inactive') {
                 changes.inactive.push(this.summarizeServer(next));
+            } else if (previous.status !== 'missing' && status === 'missing') {
+                changes.missing.push(this.summarizeServer(next));
             }
 
             if (missCount >= this.pruneMissLimit) {
@@ -247,7 +257,8 @@ class FileHandler {
                     status: 'active'
                 });
 
-                nextServers[id] = next;
+                publishedById.set(id, next);
+                nextServers[id] = this.buildStateServer(next);
                 changes.added.push(this.summarizeServer(next));
                 return;
             }
@@ -262,9 +273,10 @@ class FileHandler {
                 status: 'active'
             });
 
-            nextServers[id] = next;
+            publishedById.set(id, next);
+            nextServers[id] = this.buildStateServer(next);
 
-            if (previous.status === 'inactive') {
+            if (previous.status !== 'active') {
                 changes.recovered.push(this.summarizeServer(next));
             } else if (changed) {
                 changes.updated.push(this.summarizeServer(next));
@@ -284,20 +296,22 @@ class FileHandler {
             }, {})
         };
 
-        const activeServers = this.sortServers(Object.keys(state.servers)
-            .map(id => state.servers[id])
-            .filter(server => server.status === 'active'));
-        const inactiveServers = Object.keys(state.servers)
-            .map(id => state.servers[id])
-            .filter(server => server.status !== 'active');
-        const countries = this.buildCountries(activeServers, currentCountries);
+        const stateServers = Object.keys(state.servers).map(id => state.servers[id]);
+        const publishedServers = this.sortServers(Array.from(publishedById.values()));
+        const missingServers = stateServers.filter(server => server.status === 'missing');
+        const inactiveServers = stateServers.filter(server => server.status === 'inactive');
+        const countries = this.buildCountries(publishedServers, currentCountries);
 
         const statistics = Object.assign({}, collectionStats, {
-            activeServers: activeServers.length,
+            activeServers: publishedServers.length,
+            publishedServers: publishedServers.length,
+            stateServers: stateServers.length,
+            missingServers: missingServers.length,
             inactiveServers: inactiveServers.length,
             addedServers: changes.added.length,
             updatedServers: changes.updated.length,
             recoveredServers: changes.recovered.length,
+            newlyMissingServers: changes.missing.length,
             newlyInactiveServers: changes.inactive.length,
             prunedServers: changes.pruned.length,
             unchangedServers: changes.unchangedCount,
@@ -306,7 +320,7 @@ class FileHandler {
 
         return {
             generatedAt: now,
-            servers: activeServers,
+            servers: publishedServers,
             countries,
             state,
             changes,
@@ -383,6 +397,7 @@ class FileHandler {
                 added: vpnList.changes.added.length,
                 updated: vpnList.changes.updated.length,
                 recovered: vpnList.changes.recovered.length,
+                missing: vpnList.changes.missing.length,
                 inactive: vpnList.changes.inactive.length,
                 pruned: vpnList.changes.pruned.length,
                 unchanged: vpnList.changes.unchangedCount
@@ -391,6 +406,7 @@ class FileHandler {
                 added: vpnList.changes.added,
                 updated: vpnList.changes.updated,
                 recovered: vpnList.changes.recovered,
+                missing: vpnList.changes.missing,
                 inactive: vpnList.changes.inactive,
                 pruned: vpnList.changes.pruned
             }

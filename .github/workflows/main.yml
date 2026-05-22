@@ -61,7 +61,9 @@ jobs:
       STATE_PATH: public/state/servers.json
       ACTIVE_MISS_LIMIT: "3"
       PRUNE_MISS_LIMIT: "24"
-      TOTAL_REQUESTS: ${{ github.event_name == 'schedule' && '1500' || github.event.inputs.requests || '100' }}
+      # CI performs passive VPN Gate API collection only. Do not add active probes
+      # such as ping, TCP checks, OpenVPN connection attempts, or speed tests here.
+      TOTAL_REQUESTS: ${{ github.event_name == 'schedule' && '200' || github.event.inputs.requests || '100' }}
 
     steps:
       - uses: actions/checkout@v6

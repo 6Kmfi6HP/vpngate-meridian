@@ -18,7 +18,7 @@ Run a live collection:
 npm start
 ```
 
-By default the scraper performs 1500 VPN Gate API requests and writes generated files under `public/`:
+By default the scraper performs 1500 VPN Gate API requests locally and writes generated files under `public/`:
 
 - `public/json/data.json`
 - `public/json/changes.json`
@@ -56,7 +56,7 @@ python scripts/enrich_maxmind.py \
   --maxmind-dir maxmind
 ```
 
-The MaxMind export is a metadata enrichment step. It does not replace `public/json/data.json`, does not change the incremental state model, and does not claim VPN/proxy risk scoring beyond the GeoLite2 fields available in the databases.
+The MaxMind export is a metadata enrichment step. It does not replace `public/json/data.json`, does not change the incremental state model, does not connect to VPN servers, and does not claim VPN/proxy risk scoring beyond the GeoLite2 fields available in the databases.
 
 ## Incremental Data Model
 
@@ -73,7 +73,11 @@ State fields include:
 - `configHash`
 - `contentHash`
 
-Servers are not removed immediately when one scrape misses them. `ACTIVE_MISS_LIMIT` controls when a missing server becomes inactive, and `PRUNE_MISS_LIMIT` controls when long-missing inactive entries are pruned from state.
+The public output is a passive snapshot of servers seen in the current VPN Gate API collection. Servers missed by the current scrape are not published to `README.md`, `json/data.json`, or `configs/*.ovpn`, but they remain in state as `missing` until the miss threshold is reached. `ACTIVE_MISS_LIMIT` controls when a missing server becomes `inactive`, and `PRUNE_MISS_LIMIT` controls when long-missing inactive entries are pruned from state.
+
+State is intentionally lighter than the published data. `state/servers.json` keeps lifecycle metadata and hashes, but does not retain `openvpn_configdata_base64` for historical entries. This prevents old OpenVPN configs from accumulating while still allowing recovered servers to be tracked across runs.
+
+The scraper does not actively test, ping, connect to, or speed-test VPN server IPs. Reported `ping` and `speed` values come from the VPN Gate API payload and should be treated as source-reported metadata.
 
 ## GitHub Actions
 
@@ -82,7 +86,8 @@ The workflow runs Node.js and Python tests on push and pull request. On push, ma
 Default CI behavior:
 
 - Push or manual dispatch: 100 live requests by default.
-- Schedule: 1500 live requests every 6 hours.
+- Schedule: 200 live requests every 6 hours.
+- CI performs passive API collection only; it does not actively probe or connect to VPN server IPs.
 - Generated data is not committed to `master` or `main`.
 
 ## Test
