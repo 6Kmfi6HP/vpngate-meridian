@@ -100,4 +100,21 @@ assert.strictEqual(cachedResult.servers.length, 1);
 assert.strictEqual(cachedResult.statistics.missingServers, 1);
 assert.ok(cachedResult.servers[0].openvpn_configdata_base64);
 
+const unpublishableOutputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vpngate-unpublishable-'));
+const unpublishableHandler = new FileHandler({
+    outputDir: unpublishableOutputDir,
+    statePath: path.join(unpublishableOutputDir, 'state', 'servers.json'),
+    activeMissLimit: 2,
+    pruneMissLimit: 4
+});
+const unpublishableResult = unpublishableHandler.mergeVpnData([createServer({ hostname: 'unpublishable.example.test' })], { jp: 'Japan' }, { totalRequests: 1 });
+const unpublishableId = unpublishableResult.servers[0].id;
+delete unpublishableResult.state.servers[unpublishableId].openvpn_configdata_base64;
+unpublishableHandler.saveState(unpublishableResult.state);
+
+const unpublishableMissingResult = unpublishableHandler.mergeVpnData([], {}, { totalRequests: 1 });
+assert.strictEqual(unpublishableMissingResult.servers.length, 0);
+assert.strictEqual(unpublishableMissingResult.statistics.missingServers, 0);
+assert.strictEqual(unpublishableMissingResult.statistics.inactiveServers, 1);
+
 console.log('fileHandler incremental state tests passed');

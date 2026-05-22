@@ -252,7 +252,10 @@ class FileHandler {
 
             const previous = previousServers[id];
             const missCount = (previous.missCount || 0) + 1;
-            const status = missCount >= this.activeMissLimit ? 'inactive' : 'missing';
+            let status = missCount >= this.activeMissLimit ? 'inactive' : 'missing';
+            if (status === 'missing' && !previous.openvpn_configdata_base64) {
+                status = 'inactive';
+            }
             const next = this.buildStateServer(Object.assign({}, previous, {
                 missCount,
                 status
