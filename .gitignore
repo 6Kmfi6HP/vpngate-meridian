@@ -20,6 +20,8 @@ pnpm-debug.log*
 # Test and coverage output
 coverage/
 .nyc_output/
+.pytest_cache/
+__pycache__/
 
 # Environment and local configuration
 .env
