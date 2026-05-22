@@ -1,44 +1,102 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: VPNGate
+
 on:
   push:
     branches: [master, main]
   pull_request:
     branches: [master, main]
   workflow_dispatch:
+    inputs:
+      requests:
+        description: "Number of VPN Gate API requests to run"
+        required: false
+        default: "100"
   schedule:
-    - cron: "0 */1 * * *"
+    - cron: "0 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vpngate-data-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  cron:
+  validate:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [14.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: rm -rf ./configs
-      - run: mkdir configs
-      - run: npm install --if-present
-      - run: npm start
-      - name: Commit and push if it changed
-        run: |-
-          git config user.name "6Kmfi6HP"
-          git config user.email "3kmfi6hp.rtt.icu"
+          node-version: 14.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  collect:
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name != 'pull_request'
+    env:
+      OUTPUT_DIR: public
+      STATE_PATH: public/state/servers.json
+      ACTIVE_MISS_LIMIT: "3"
+      PRUNE_MISS_LIMIT: "24"
+      TOTAL_REQUESTS: ${{ github.event_name == 'schedule' && '1500' || github.event.inputs.requests || '100' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 14.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore previous incremental state
+        run: |
+          mkdir -p public/state
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages:refs/remotes/origin/gh-pages --depth=1
+            git show origin/gh-pages:state/servers.json > public/state/servers.json || true
+          fi
+
+      - name: Collect VPN Gate data
+        run: npm start
+
+      - name: Validate generated output
+        run: |
+          test -s public/README.md
+          test -s public/json/data.json
+          test -s public/json/changes.json
+          test -s public/state/servers.json
+
+      - name: Upload generated output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpngate-generated-output
+          path: public
+          retention-days: 7
+
+      - name: Publish generated data to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd public
+          touch .nojekyll
+          git init
+          git checkout -B gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          timestamp=$(date '+%F %H:%M:%S %Z')
-          git commit -m "Update Data ${timestamp}" || exit 0
-          git push
+          git commit -m "Update generated VPN data"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages

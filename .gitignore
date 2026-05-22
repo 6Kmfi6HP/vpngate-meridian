@@ -40,3 +40,9 @@ tmp/
 temp/
 *.tmp
 *.bak
+
+# Generated VPN Gate output is published from GitHub Actions to gh-pages.
+/public/
+/configs/
+/json/
+/state/

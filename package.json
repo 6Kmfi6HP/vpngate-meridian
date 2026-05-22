@@ -4,7 +4,8 @@
   "description": "A multi-threaded VPN Gate scraper API",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --check index.js && node --check lib/VpnScraper.js && node --check utils/fileHandler.js && node test/fileHandler.test.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
