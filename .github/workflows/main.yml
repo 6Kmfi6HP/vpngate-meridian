@@ -94,8 +94,8 @@ jobs:
           touch .nojekyll
           git init
           git checkout -B gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "6Kmfi6HP"
+          git config user.email "179412085+6Kmfi6HP@users.noreply.github.com"
           git add -A
           git commit -m "Update generated VPN data"
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
