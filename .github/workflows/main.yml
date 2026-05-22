@@ -26,10 +26,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 14.x
 
@@ -51,10 +51,10 @@ jobs:
       TOTAL_REQUESTS: ${{ github.event_name == 'schedule' && '1500' || github.event.inputs.requests || '100' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 14.x
 
@@ -80,7 +80,7 @@ jobs:
           test -s public/state/servers.json
 
       - name: Upload generated output artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vpngate-generated-output
           path: public
