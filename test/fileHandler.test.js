@@ -34,6 +34,9 @@ assert.ok(result.state.servers[result.servers[0].id].openvpn_configdata_base64);
 handler.saveState(result.state);
 handler.saveVpnConfigs(result.servers);
 assert.ok(fs.existsSync(path.join(outputDir, result.servers[0].configPath)));
+handler.generateHomePage(result);
+assert.ok(fs.existsSync(path.join(outputDir, 'index.html')));
+assert.ok(fs.readFileSync(path.join(outputDir, 'index.html'), 'utf-8').includes('json/data.json'));
 
 result = handler.mergeVpnData([createServer({ speed: '200000000' })], { jp: 'Japan' }, { totalRequests: 1 });
 assert.strictEqual(result.changes.updated.length, 1);

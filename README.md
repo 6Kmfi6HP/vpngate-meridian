@@ -26,6 +26,7 @@ By default the scraper performs 1500 VPN Gate API requests locally and writes ge
 - `public/state/servers.json`
 - `public/configs/*.ovpn`
 - `public/mihomo_openvpn.yaml` when MaxMind export is enabled
+- `public/index.html`
 - `public/README.md`
 
 For a smaller local smoke run:
@@ -82,7 +83,7 @@ The scraper does not actively test, ping, connect to, or speed-test VPN server I
 
 ## GitHub Actions
 
-The workflow runs Node.js and Python tests on push and pull request. On push, manual dispatch, and schedule it also runs a live scrape, restores the previous state from `gh-pages`, generates a new output snapshot, enriches it with MaxMind data, uploads it as an artifact, and force-pushes the generated files to `gh-pages`.
+The workflow runs Node.js and Python tests on push and pull request. On push, manual dispatch, and schedule it also runs a live scrape, restores the previous state from `gh-pages`, generates a new output snapshot, enriches it with MaxMind data, uploads it as an artifact, and force-pushes the generated files to `gh-pages`. The generated `public/index.html` is the GitHub Pages homepage; configure Pages to serve from the `gh-pages` branch root. For this repository, the Pages URL is `https://6Kmfi6HP.github.io/Vpngate-Scraper/` after the branch is published and Pages is enabled.
 
 Default CI behavior:
 

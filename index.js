@@ -140,10 +140,15 @@ if (!isMainThread) {
             }) : null;
 
             if (saveBar) {
-                saveBar.start(5, 0);
+                saveBar.start(6, 0);
             }
 
             const savedConfigs = fileHandler.saveVpnConfigs(mergedResults.servers);
+            if (saveBar) {
+                saveBar.increment();
+            }
+
+            fileHandler.generateHomePage(mergedResults);
             if (saveBar) {
                 saveBar.increment();
             }

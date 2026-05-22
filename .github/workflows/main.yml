@@ -142,6 +142,7 @@ jobs:
       - name: Validate generated output
         run: |
           test -s public/README.md
+          test -s public/index.html
           test -s public/json/data.json
           test -s public/json/data.maxmind.json
           test -s public/json/changes.json
