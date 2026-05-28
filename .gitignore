@@ -45,6 +45,9 @@ temp/
 maxmind/
 *.mmdb
 
+# Go tester binary (built locally or in CI)
+scripts/tester/tester
+
 # Generated VPN Gate output is published from GitHub Actions to gh-pages.
 /public/
 /configs/
