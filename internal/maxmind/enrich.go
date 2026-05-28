@@ -416,13 +416,13 @@ func BuildMihomoConfig(dataPath, outputPath string) error {
 			}
 		}
 		if config.cert != "" {
-			sb.WriteString("    certificate: |-\n")
+			sb.WriteString("    cert: |-\n")
 			for line := range strings.SplitSeq(config.cert, "\n") {
 				sb.WriteString(fmt.Sprintf("      %s\n", line))
 			}
 		}
 		if config.key != "" {
-			sb.WriteString("    private-key: |-\n")
+			sb.WriteString("    key: |-\n")
 			for line := range strings.SplitSeq(config.key, "\n") {
 				sb.WriteString(fmt.Sprintf("      %s\n", line))
 			}
