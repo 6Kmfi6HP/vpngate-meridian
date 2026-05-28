@@ -194,7 +194,6 @@ jobs:
             --tested-data public/json/data.tested.json \
             --alive-mihomo public/mihomo_tested_openvpn.yaml \
             --results-json public/json/test_results.json \
-            --max-alive 100 \
             --timeout 10 \
             --workers 20
 
