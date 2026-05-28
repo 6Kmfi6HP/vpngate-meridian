@@ -125,6 +125,20 @@ func main() {
 	wg.Wait()
 	close(done)
 
+	// Log error summary to stderr for CI diagnostics.
+	errCounts := map[string]int{}
+	for _, r := range results {
+		if r.Error != "" {
+			errCounts[r.Error]++
+		}
+	}
+	if len(errCounts) > 0 {
+		log.Printf("Error breakdown (%d unique):", len(errCounts))
+		for err, count := range errCounts {
+			log.Printf("  [%d] %s", count, err)
+		}
+	}
+
 	// Build output.
 	output := TestOutput{
 		GeneratedAt: time.Now().UTC().Format("2006-01-02T15:04:05.000Z"),

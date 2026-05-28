@@ -447,18 +447,15 @@ def main(argv: Optional[List[str]] = None) -> None:
         if server_idx is None:
             continue
 
-        if r.get('alive'):
-            servers[server_idx]['test'] = {
-                'alive': True,
-                'latencyMs': r.get('latencyMs'),
-                'testedAt': now_iso,
-            }
-        else:
-            servers[server_idx]['test'] = {
-                'alive': False,
-                'latencyMs': None,
-                'testedAt': now_iso,
-            }
+        test_entry: Dict[str, Any] = {
+            'alive': bool(r.get('alive')),
+            'testedAt': now_iso,
+        }
+        if r.get('latencyMs'):
+            test_entry['latencyMs'] = r['latencyMs']
+        if r.get('error'):
+            test_entry['error'] = r['error']
+        servers[server_idx]['test'] = test_entry
 
     # -- Statistics --------------------------------------------------------
     stats = compute_statistics(all_delays, len(go_results))
@@ -474,17 +471,33 @@ def main(argv: Optional[List[str]] = None) -> None:
     # 1. Tested data.json
     save_json_atomic(vpn_data, args.tested_data)
 
-    # 2. Results JSON (summary + per-proxy sorted by latency)
-    sorted_results = sorted(
-        [r for r in go_results if r.get('alive')],
-        key=lambda x: x.get('latencyMs', 0),
+    # 2. Results JSON (all results sorted: alive first by latency, then dead)
+    all_results_sorted = sorted(
+        go_results,
+        key=lambda x: (
+            not x.get('alive', False),
+            x.get('latencyMs', 999999) if x.get('alive') else 0,
+        ),
     )
+    # Count error categories for diagnostics
+    error_counts: Dict[str, int] = {}
+    for r in go_results:
+        err = r.get('error', '') or ''
+        category = err.split(':')[0] if err else 'no_error'
+        error_counts[category] = error_counts.get(category, 0) + 1
+
     results_data: Dict[str, Any] = {
         'generatedAt': now_iso,
         'statistics': stats,
+        'errorCategories': sorted(error_counts.items(), key=lambda x: -x[1]),
         'results': [
-            {'proxyName': r['name'], 'latencyMs': r.get('latencyMs')}
-            for r in sorted_results
+            {
+                'proxyName': r['name'],
+                'alive': r.get('alive', False),
+                'latencyMs': r.get('latencyMs'),
+                'error': r.get('error'),
+            }
+            for r in all_results_sorted
         ],
     }
     save_json_atomic(results_data, args.results_json)
