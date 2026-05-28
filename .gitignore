@@ -3,6 +3,7 @@ node_modules/
 
 # Go binary (only ignore in root)
 /vpngate-scraper
+/testcheck
 
 # Logs
 logs/
