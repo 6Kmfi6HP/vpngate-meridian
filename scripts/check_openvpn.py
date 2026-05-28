@@ -98,7 +98,7 @@ def ensure_tester() -> Optional[str]:
 
     logger.info('Building Go tester binary from %s ...', TESTER_DIR)
     result = subprocess.run(
-        ['go', 'build', '-o', TESTER_BINARY, '.'],
+        ['go', 'build', '-tags', 'with_gvisor', '-o', TESTER_BINARY, '.'],
         cwd=TESTER_DIR,
         capture_output=True,
         text=True,

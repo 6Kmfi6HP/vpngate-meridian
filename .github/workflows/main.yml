@@ -185,7 +185,7 @@ jobs:
           cache-dependency-path: scripts/tester/go.sum
 
       - name: Build OpenVPN tester
-        run: cd scripts/tester && go build -o tester .
+        run: cd scripts/tester && go build -tags with_gvisor -o tester .
 
       - name: Use Python
         uses: actions/setup-python@v6
