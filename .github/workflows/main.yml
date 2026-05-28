@@ -24,33 +24,20 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v6
 
-      - name: Use Node.js
-        uses: actions/setup-node@v6
+      - name: Use Go
+        uses: actions/setup-go@v6
         with:
-          node-version: 14.x
+          go-version: '1.24'
+          cache-dependency-path: go.sum
 
-      - name: Use Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-maxmind.txt
+      - name: Build
+        run: go build -o /dev/null ./cmd/vpngate-scraper/ && go build -o /dev/null ./cmd/testcheck/
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Install MaxMind export dependencies
-        run: python -m pip install -r requirements-maxmind.txt
-
-      - name: Run MaxMind export tests
-        run: python -m pytest -q
+      - name: Vet
+        run: go vet ./...
 
   collect:
     runs-on: ubuntu-latest
@@ -61,30 +48,19 @@ jobs:
       STATE_PATH: public/state/servers.json
       ACTIVE_MISS_LIMIT: "12"
       PRUNE_MISS_LIMIT: "48"
-      # CI performs passive VPN Gate API collection only. Do not add active probes
-      # such as ping, TCP checks, OpenVPN connection attempts, or speed tests here.
       TOTAL_REQUESTS: ${{ github.event_name == 'schedule' && '200' || github.event.inputs.requests || '100' }}
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Use Node.js
-        uses: actions/setup-node@v6
+      - name: Use Go
+        uses: actions/setup-go@v6
         with:
-          node-version: 14.x
+          go-version: '1.24'
+          cache-dependency-path: go.sum
 
-      - name: Use Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-maxmind.txt
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install MaxMind export dependencies
-        run: python -m pip install -r requirements-maxmind.txt
+      - name: Build scraper
+        run: go build -o vpngate-scraper ./cmd/vpngate-scraper/
 
       - name: Restore previous incremental state
         run: |
@@ -96,7 +72,7 @@ jobs:
           fi
 
       - name: Collect VPN Gate data
-        run: npm start
+        run: ./vpngate-scraper
 
       - name: Download MaxMind databases
         run: |
@@ -131,9 +107,9 @@ jobs:
           download_database GeoLite2-City
           download_database GeoLite2-ASN
 
-      - name: Export MaxMind and mihomo data
+      - name: Run MaxMind enrichment
         run: |
-          python scripts/enrich_maxmind.py \
+          go run ./cmd/vpngate-scraper/ enrich \
             --input public/json/data.json \
             --output public/json/data.maxmind.json \
             --mihomo-output public/mihomo_openvpn.yaml \
@@ -167,18 +143,13 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: '1.24'
-          cache-dependency-path: scripts/tester/go.sum
+          cache-dependency-path: go.sum
 
       - name: Build OpenVPN tester
         run: cd scripts/tester && go build -tags with_gvisor -o tester .
 
-      - name: Use Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: python -m pip install pyyaml
+      - name: Build test check
+        run: go build -o testcheck ./cmd/testcheck/
 
       - name: Download generated artifact
         uses: actions/download-artifact@v7
@@ -188,7 +159,7 @@ jobs:
 
       - name: Test OpenVPN servers with mihomo
         run: |
-          python scripts/check_openvpn.py \
+          ./testcheck \
             --mihomo-input public/mihomo_openvpn.yaml \
             --data-input public/json/data.json \
             --tested-data public/json/data.tested.json \
@@ -201,22 +172,7 @@ jobs:
       - name: Validate test output
         run: |
           echo "=== Test Results Summary ==="
-          python3 -c "
-          import json
-          r = json.load(open('public/json/test_results.json'))
-          s = r['statistics']
-          print('Total:', s['total'])
-          print('Tested:', s['tested'])
-          print('Alive:', s['alive'])
-          print('Dead:', s['dead'])
-          print('Alive rate:', s['aliveRate'], '%')
-          if 'avgLatency' in s:
-              print('Average latency:', s['avgLatency'], 'ms')
-              print('P50 latency:', s['p50Latency'], 'ms')
-              print('P90 latency:', s['p90Latency'], 'ms')
-          else:
-              print('No alive proxies found')
-          "
+          jq '.statistics' public/json/test_results.json
 
       - name: Upload tested artifact
         uses: actions/upload-artifact@v7

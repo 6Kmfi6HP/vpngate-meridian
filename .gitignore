@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Go binary
+vpngate-scraper
+
 # Logs
 logs/
 *.log
@@ -53,3 +56,13 @@ scripts/tester/tester
 /configs/
 /json/
 /state/
+
+# Go test cache
+*.test
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib

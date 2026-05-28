@@ -1,39 +1,65 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
+> Guidelines for AI coding agents working on this repository.
 
-This is a CommonJS Node.js scraper for VPN Gate data. The entry point is `index.js`, which starts worker threads, collects VPN data, deduplicates servers, and writes generated outputs. Core scraping/parsing logic lives in `lib/VpnScraper.js`; `lib/main.js` is an older single-fetch helper. File generation utilities are in `utils/fileHandler.js`, and request randomization helpers are in `utils/randomizer.js`.
+## Project Overview
 
-Generated artifacts are part of the repository output: `configs/` contains OpenVPN `.ovpn` files, `json/data.json` stores structured results, and `README.md` is regenerated as the public server list.
+VPN Gate scraper that collects free VPN server data, enriches with GeoIP information, and generates web output. **Pure Go project** with Python post-processing for MaxMind enrichment.
 
-## Build, Test, and Development Commands
+## Build & Test Commands
 
-- `npm install`: install runtime dependencies from `package-lock.json`.
-- `npm start`: run `node index.js`; fetches live VPN Gate data, rewrites `configs/`, updates `json/data.json`, and regenerates `README.md`.
-- `node index.js`: direct equivalent of `npm start` for local debugging.
+```bash
+go build -o vpngate-scraper ./cmd/vpngate-scraper/  # Build
+go vet ./...                                         # Lint
+go run ./cmd/vpngate-scraper/                        # Run
+```
 
-There is no build step. The GitHub Actions workflow runs on Node `14.x`, removes and recreates `configs/`, runs `npm install --if-present`, then runs `npm start`.
+## Coding Standards
 
-## Coding Style & Naming Conventions
+- **Language**: Go (standard library + minimal dependencies)
+- **Formatting**: `gofmt` (enforced by toolchain)
+- **Error handling**: Always check errors; use `fmt.Errorf("context: %w", err)` for wrapping
+- **Testing**: Use `testing` package with table-driven tests
+- **Imports**: Group standard library, then external packages, then internal packages
+- **Naming**: Follow Go conventions (camelCase, exported PascalCase)
+- **Comments**: Only when the "why" is non-obvious
 
-Use CommonJS modules with `require` and `module.exports`. Keep JavaScript indentation consistent with the current codebase: four spaces inside blocks, semicolons, and single quotes unless matching existing double-quoted code. Use PascalCase for classes such as `VpnScraper` and `FileHandler`; use camelCase for functions, variables, and object properties.
+## Architecture
 
-Keep generated-file behavior centralized in `utils/fileHandler.js`. Avoid hard-coding output paths elsewhere unless adding a deliberate new artifact.
+```
+cmd/vpngate-scraper/     # CLI entry point
+internal/
+  config/                # Environment variable configuration
+  scraper/               # HTTP client + worker pool
+  csvparser/             # VPN Gate CSV response parser
+  state/                 # Incremental state management
+  output/                # File writers (JSON, HTML, README)
+  maxmind/               # GeoLite2 enrichment
+  mihomo/                # mihomo YAML generation
+```
 
-## Testing Guidelines
+## Commit Messages
 
-No automated test framework is currently configured. For scraper or parser changes, add focused tests under a new `test/` directory with sample VPN Gate CSV payloads. Until tests exist, use `npm start` as a smoke test and verify that `json/data.json`, `configs/*.ovpn`, and `README.md` are updated.
+- Format: `<type>(<scope>): <description>`
+- Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+- Keep descriptions under 72 characters
+- Reference issues where relevant
 
-## Commit & Pull Request Guidelines
+## Environment Variables
 
-This checkout has no existing commit history to infer a convention from. Use short, imperative commit messages such as `Update scraper parsing` or `Add parser tests`. The workflow’s automated data refresh uses `Update Data <timestamp>`.
+All configuration via environment variables, loaded in `internal/config/config.go`. See CLAUDE.md for full list.
 
-Pull requests should describe the behavior changed, note whether live VPN Gate data was fetched, and list regenerated files.
+## CI/CD
 
-## Security & Configuration Tips
+GitHub Actions workflow at `.github/workflows/main.yml`:
+- `validate`: Go build + vet
+- `collect`: Run scraper, enrich with MaxMind, upload artifact
+- `test`: Build OpenVPN tester, test servers, publish to gh-pages
+- Schedule: every 6 hours
 
-Treat `.ovpn` files and live scraped endpoints as generated external data. Do not add secrets, private proxy credentials, or local-only network assumptions. If proxy support is re-enabled, keep configuration explicit and avoid committing machine-specific values.
+## Important Notes
 
-## Agent-Specific Instructions
-
-Cap unknown or potentially large command output before returning it, for example by limiting file lists and generated data previews to a few kilobytes.
+- **Generated output goes to `gh-pages` branch**, not main
+- **MaxMind enrichment** currently uses Python scripts (transitional)
+- **State file** is critical for incremental scraping - never delete without understanding lifecycle
+- **Atomic writes** for all output files (temp + rename)

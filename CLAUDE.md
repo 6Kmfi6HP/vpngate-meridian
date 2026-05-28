@@ -7,17 +7,16 @@ Additional reference: [AGENTS.md](./AGENTS.md) contains coding style, commit gui
 ## Commands
 
 ```bash
-npm ci                  # Install dependencies (prefer over npm install)
-npm start               # Run scraper (default: 1500 requests, output to public/)
-npm test                # Node.js syntax check + fileHandler incremental state tests
-npm test -- --verbose   # Show test assertions
-python -m pytest -q     # Python MaxMind enrichment tests
+go build -o vpngate-scraper ./cmd/vpngate-scraper/  # Build the scraper binary
+go run ./cmd/vpngate-scraper/                        # Run the scraper
+go vet ./...                                         # Lint check
+go test ./...                                        # Run tests
 ```
 
 ### Smoke test (local, small run)
 
 ```bash
-TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json npm start
+TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json go run ./cmd/vpngate-scraper/
 ```
 
 ### MaxMind enrichment
@@ -33,15 +32,18 @@ python scripts/enrich_maxmind.py \
 
 ## Architecture
 
-**Two-language project**: Node.js (scraper) + Python (post-processing enrichment).
+**Pure Go project** with Python post-processing for MaxMind enrichment.
 
-### Scraper (`index.js` + `lib/`)
+### Scraper (`cmd/vpngate-scraper/` + `internal/`)
 
-- **index.js** — dual role: entry point AND worker thread code (uses `isMainThread` branching). Main thread distributes requests across worker threads (max `WORKER_COUNT`, default 8), collects results, then calls `FileHandler` to merge, deduplicate, and write output. Worker threads each run `VpnScraper.fetchVpnData()` in a loop.
-- **lib/VpnScraper.js** — fetches from `vpngate.net/api/iphone/` with randomized headers/params, parses CSV response into server objects. Proxy agent (SOCKS5) is currently commented out.
-- **lib/main.js** — legacy single-fetch helper. Not used by the current scraper.
-- **utils/fileHandler.js** — incremental state model (`FileHandler` class). Reads previous `state/servers.json`, merges current collection, tracks lifecycle (firstSeen, lastSeen, missCount, contentHash). Configurable `ACTIVE_MISS_LIMIT` (default 12) and `PRUNE_MISS_LIMIT` (default 48). Outputs: `public/json/data.json`, `public/json/changes.json`, `public/configs/*.ovpn`, `public/index.html`, `public/README.md`, `public/state/servers.json`.
-- **utils/randomizer.js** — random User-Agent, cookie, and string generators.
+- **cmd/vpngate-scraper/main.go** — CLI entry point. Orchestrates scraping, state management, and file output.
+- **internal/config/** — Loads environment variables into a typed `Config` struct.
+- **internal/scraper/** — HTTP client with randomized headers, worker pool for concurrent requests.
+- **internal/csvparser/** — Parses VPN Gate CSV API response into `Server` structs.
+- **internal/state/** — Incremental state model. Merges current scrape with previous state, tracks lifecycle.
+- **internal/output/** — File writers: JSON, HTML (via embedded template), README, VPN configs.
+- **internal/maxmind/** — MaxMind GeoLite2 enrichment (GeoIP country/city/ASN annotations).
+- **internal/mihomo/** — mihomo YAML proxy config generation.
 
 **Key dedup logic**: `buildServerIdentity()` creates a stable server ID from hostname first, falls back to ip+country, then to config hash. When two raw entries produce the same ID, `selectPreferredServer()` keeps the one with higher speed.
 
@@ -65,15 +67,15 @@ Each scrape produces a diff of the state transition: `added`, `updated`, `recove
 
 ### CI/CD (`.github/workflows/main.yml`)
 
-- `validate` job: Node.js tests + Python tests (runs on push + PR)
+- `validate` job: Go build + vet (runs on push + PR)
 - `collect` job: restores state from `gh-pages`, runs scraper, downloads MaxMind DBs from external repo, enriches, validates, uploads artifact, force-pushes to `gh-pages` branch
+- `test` job: builds Go tester, tests OpenVPN servers with mihomo
 - Schedule: every 6 hours (200 requests). Manual dispatch and push: 100 requests.
 
 ## Important Notes
 
 - **Generated output goes to `gh-pages`, not main branch.** The `public/` directory is gitignored on main. Do not commit generated files to main.
-- **No build step.** This is pure Node.js — `node index.js` runs directly.
-- **Node tests use raw `assert`, no test framework.** Python tests use pytest.
+- **No build step required for development.** This is pure Go — `go run ./cmd/vpngate-scraper/` runs directly.
 - **The generated `index.html` is a full client-side SPA** with inline JavaScript that fetches `data.json` at runtime, supports filtering/searching/sorting, and updates metrics dynamically.
 
 ## Environment Variables
@@ -81,10 +83,10 @@ Each scrape produces a diff of the state transition: `added`, `updated`, `recove
 | Variable | Default | Purpose |
 |---|---|---|
 | `TOTAL_REQUESTS` | 1500 | Number of API calls |
-| `WORKER_COUNT` | 8 | Max worker threads |
+| `WORKER_COUNT` | 8 | Max worker goroutines |
 | `OUTPUT_DIR` | public | Output directory |
 | `STATE_PATH` | public/state/servers.json | Incremental state file |
 | `ACTIVE_MISS_LIMIT` | 12 | Misses before server goes inactive |
 | `PRUNE_MISS_LIMIT` | 48 | Misses before pruning from state |
 | `REQUEST_TIMEOUT_MS` | 30000 | Per-request timeout |
-| `NO_PROGRESS` | (unset) | Set to "1" to hide progress bars |
+| `NO_PROGRESS` | (unset) | Set to "1" to hide progress |
