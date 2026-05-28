@@ -170,3 +170,59 @@ jobs:
           git commit -m "Update generated VPN data"
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force origin gh-pages
+
+  test:
+    runs-on: ubuntu-latest
+    needs: collect
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install testing dependencies
+        run: python -m pip install pyyaml
+
+      - name: Download generated artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: vpngate-generated-output
+          path: public
+
+      - name: Test OpenVPN servers with mihomo
+        run: |
+          python scripts/test_openvpn.py \
+            --mihomo-input public/mihomo_openvpn.yaml \
+            --data-input public/json/data.json \
+            --tested-data public/json/data.tested.json \
+            --alive-mihomo public/mihomo_tested_openvpn.yaml \
+            --results-json public/json/test_results.json \
+            --max-alive 100 \
+            --batch-size 30
+
+      - name: Validate test output
+        run: |
+          echo "=== Test Results Summary ==="
+          python3 -c "
+          import json
+          r = json.load(open('public/json/test_results.json'))
+          print('Total:', r['statistics']['total'])
+          print('Tested:', r['statistics']['tested'])
+          print('Alive:', r['statistics']['alive'])
+          print('Dead:', r['statistics']['dead'])
+          print('Alive rate:', r['statistics']['aliveRate'])
+          print('Average latency:', r['statistics']['avgLatency'], 'ms')
+          "
+
+      - name: Upload tested artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: vpngate-tested-output
+          path: |
+            public/json/data.tested.json
+            public/json/test_results.json
+            public/mihomo_tested_openvpn.yaml
+          retention-days: 7
