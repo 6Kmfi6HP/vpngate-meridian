@@ -203,7 +203,7 @@ jobs:
 
       - name: Test OpenVPN servers with mihomo
         run: |
-          python scripts/test_openvpn.py \
+          python scripts/check_openvpn.py \
             --mihomo-input public/mihomo_openvpn.yaml \
             --data-input public/json/data.json \
             --tested-data public/json/data.tested.json \
