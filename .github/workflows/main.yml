@@ -185,7 +185,7 @@ jobs:
           cache-dependency-path: scripts/tester/go.sum
 
       - name: Build OpenVPN tester
-        run: go build -o scripts/tester/tester ./scripts/tester/
+        run: cd scripts/tester && go build -o tester .
 
       - name: Use Python
         uses: actions/setup-python@v6
@@ -219,12 +219,18 @@ jobs:
           python3 -c "
           import json
           r = json.load(open('public/json/test_results.json'))
-          print('Total:', r['statistics']['total'])
-          print('Tested:', r['statistics']['tested'])
-          print('Alive:', r['statistics']['alive'])
-          print('Dead:', r['statistics']['dead'])
-          print('Alive rate:', r['statistics']['aliveRate'])
-          print('Average latency:', r['statistics']['avgLatency'], 'ms')
+          s = r['statistics']
+          print('Total:', s['total'])
+          print('Tested:', s['tested'])
+          print('Alive:', s['alive'])
+          print('Dead:', s['dead'])
+          print('Alive rate:', s['aliveRate'], '%')
+          if 'avgLatency' in s:
+              print('Average latency:', s['avgLatency'], 'ms')
+              print('P50 latency:', s['p50Latency'], 'ms')
+              print('P90 latency:', s['p90Latency'], 'ms')
+          else:
+              print('No alive proxies found')
           "
 
       - name: Upload tested artifact
