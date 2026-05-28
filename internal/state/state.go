@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/csvparser"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/csvparser"
 )
 
 // ServerState tracks a server's lifecycle in the incremental state.

@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/state"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/state"
 )
 
 func (w *Writer) GenerateReadme(result *state.MergeResult) error {
 	var content string
-	content += "# VPN Gate Data\n\n"
-	content += "This branch contains generated VPN Gate scraper output. The source code lives on the main branch.\n\n"
+	content += "# VPN Meridian Data\n\n"
+	content += "This branch contains generated VPN Meridian output. The source code lives on the main branch.\n\n"
 	content += "Last generated: " + result.GeneratedAtISO + "\n\n"
 	content += "Active servers: " + strconv.Itoa(len(result.Servers)) + "\n\n"
 	content += "Machine-readable data: [json/data.json](./json/data.json)\n\n"

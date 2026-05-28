@@ -9,9 +9,9 @@ VPN Gate scraper that collects free VPN server data, enriches with GeoIP informa
 ## Build & Test Commands
 
 ```bash
-go build -o vpngate-scraper ./cmd/vpngate-scraper/  # Build
+go build -o vpn-meridian ./cmd/vpn-meridian/       # Build
 go vet ./...                                         # Lint
-go run ./cmd/vpngate-scraper/                        # Run
+go run ./cmd/vpn-meridian/                          # Run
 ```
 
 ## Coding Standards
@@ -27,7 +27,7 @@ go run ./cmd/vpngate-scraper/                        # Run
 ## Architecture
 
 ```
-cmd/vpngate-scraper/     # CLI entry point
+cmd/vpn-meridian/        # CLI entry point
 internal/
   config/                # Environment variable configuration
   scraper/               # HTTP client + worker pool

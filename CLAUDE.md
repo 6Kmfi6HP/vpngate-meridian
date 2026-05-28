@@ -7,8 +7,8 @@ Additional reference: [AGENTS.md](./AGENTS.md) contains coding style, commit gui
 ## Commands
 
 ```bash
-go build -o vpngate-scraper ./cmd/vpngate-scraper/  # Build the scraper binary
-go run ./cmd/vpngate-scraper/                        # Run the scraper
+go build -o vpn-meridian ./cmd/vpn-meridian/       # Build the binary
+go run ./cmd/vpn-meridian/                          # Run the scraper
 go vet ./...                                         # Lint check
 go test ./...                                        # Run tests
 ```
@@ -16,7 +16,7 @@ go test ./...                                        # Run tests
 ### Smoke test (local, small run)
 
 ```bash
-TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json go run ./cmd/vpngate-scraper/
+TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json go run ./cmd/vpn-meridian/
 ```
 
 ### MaxMind enrichment
@@ -34,9 +34,9 @@ python scripts/enrich_maxmind.py \
 
 **Pure Go project** with Python post-processing for MaxMind enrichment.
 
-### Scraper (`cmd/vpngate-scraper/` + `internal/`)
+### Scraper (`cmd/vpn-meridian/` + `internal/`)
 
-- **cmd/vpngate-scraper/main.go** — CLI entry point. Orchestrates scraping, state management, and file output.
+- **cmd/vpn-meridian/main.go** — CLI entry point. Orchestrates scraping, state management, and file output.
 - **internal/config/** — Loads environment variables into a typed `Config` struct.
 - **internal/scraper/** — HTTP client with randomized headers, worker pool for concurrent requests.
 - **internal/csvparser/** — Parses VPN Gate CSV API response into `Server` structs.
@@ -75,7 +75,7 @@ Each scrape produces a diff of the state transition: `added`, `updated`, `recove
 ## Important Notes
 
 - **Generated output goes to `gh-pages`, not main branch.** The `public/` directory is gitignored on main. Do not commit generated files to main.
-- **No build step required for development.** This is pure Go — `go run ./cmd/vpngate-scraper/` runs directly.
+- **No build step required for development.** This is pure Go — `go run ./cmd/vpn-meridian/` runs directly.
 - **The generated `index.html` is a full client-side SPA** with inline JavaScript that fetches `data.json` at runtime, supports filtering/searching/sorting, and updates metrics dynamically.
 
 ## Environment Variables

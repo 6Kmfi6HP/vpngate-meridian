@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/config"
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/maxmind"
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/output"
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/scraper"
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/state"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/config"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/maxmind"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/output"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/scraper"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/state"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 func runScraper() {
 	cfg := config.Load()
 
-	fmt.Println("Starting VPN Gate Scraper")
+	fmt.Println("Starting VPN Meridian")
 	fmt.Printf("Total requests: %d\n", cfg.TotalRequests)
 	fmt.Printf("Worker count: %d\n", runtime.NumCPU())
 
@@ -81,6 +81,18 @@ func runScraper() {
 		os.Exit(1)
 	}
 	fmt.Println("  Generated homepage")
+
+	if err := w.GenerateSitemap(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating sitemap: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("  Generated sitemap.xml")
+
+	if err := w.GenerateRobots(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating robots.txt: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("  Generated robots.txt")
 
 	if err := w.GenerateReadme(result); err != nil {
 		fmt.Fprintf(os.Stderr, "Error generating readme: %v\n", err)

@@ -1,4 +1,4 @@
-name: VPNGate
+name: VPN Meridian
 
 on:
   push:
@@ -18,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: vpngate-data-${{ github.ref }}
+  group: vpn-meridian-data-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build
-        run: go build -o /dev/null ./cmd/vpngate-scraper/ && go build -o /dev/null ./cmd/testcheck/
+        run: go build -o /dev/null ./cmd/vpn-meridian/ && go build -o /dev/null ./cmd/testcheck/
 
       - name: Vet
         run: go vet ./...
@@ -60,7 +60,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build scraper
-        run: go build -o vpngate-scraper ./cmd/vpngate-scraper/
+        run: go build -o vpn-meridian ./cmd/vpn-meridian/
 
       - name: Restore previous incremental state
         run: |
@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Collect VPN Gate data
-        run: ./vpngate-scraper
+        run: ./vpn-meridian
 
       - name: Download MaxMind databases
         run: |
@@ -109,7 +109,7 @@ jobs:
 
       - name: Run MaxMind enrichment
         run: |
-          go run ./cmd/vpngate-scraper/ enrich \
+          go run ./cmd/vpn-meridian/ enrich \
             --input public/json/data.json \
             --output public/json/data.maxmind.json \
             --mihomo-output public/mihomo_openvpn.yaml \
@@ -128,7 +128,7 @@ jobs:
       - name: Upload generated output artifact
         uses: actions/upload-artifact@v7
         with:
-          name: vpngate-generated-output
+          name: vpn-meridian-generated-output
           path: public
           retention-days: 7
 
@@ -154,7 +154,7 @@ jobs:
       - name: Download generated artifact
         uses: actions/download-artifact@v7
         with:
-          name: vpngate-generated-output
+          name: vpn-meridian-generated-output
           path: public
 
       - name: Test OpenVPN servers with mihomo
@@ -177,7 +177,7 @@ jobs:
       - name: Upload tested artifact
         uses: actions/upload-artifact@v7
         with:
-          name: vpngate-tested-output
+          name: vpn-meridian-tested-output
           path: |
             public/json/data.tested.json
             public/json/test_results.json

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/state"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/state"
 )
 
 type Writer struct {
@@ -158,4 +158,34 @@ func (w *Writer) SaveChanges(result *state.MergeResult) error {
 
 func (w *Writer) SaveState(path string, stateFile *state.StateFile) error {
 	return w.WriteJSONFile(path, stateFile)
+}
+
+func (w *Writer) GenerateSitemap() error {
+	sitemap := `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://6kmfi6hp.github.io/vpn-meridian/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://6kmfi6hp.github.io/vpn-meridian/json/data.json</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://6kmfi6hp.github.io/vpn-meridian/json/data.maxmind.json</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>`
+	return os.WriteFile(filepath.Join(w.OutputDir, "sitemap.xml"), []byte(sitemap), 0644)
+}
+
+func (w *Writer) GenerateRobots() error {
+	robots := `User-agent: *
+Allow: /
+
+Sitemap: https://6kmfi6hp.github.io/vpn-meridian/sitemap.xml`
+	return os.WriteFile(filepath.Join(w.OutputDir, "robots.txt"), []byte(robots), 0644)
 }

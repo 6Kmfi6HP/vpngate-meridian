@@ -1,52 +1,62 @@
-# VPNGate Scraper API
+# VPN Meridian
 
-CommonJS Node.js scraper for VPN Gate data.
+Global VPN server aggregator that collects, validates, and publishes free OpenVPN configurations with a real-time web dashboard.
 
-The main branch contains only source code and project documentation. Generated VPN data is written to `public/` during CI and published to the `gh-pages` branch as a single forced snapshot, so hourly or scheduled refreshes do not keep adding large data commits to the main branch history.
+> **Meridian** /mr.di.n/ — a great circle passing through the poles; a line connecting points of equal value on a map. VPN Meridian maps the world's free VPN infrastructure into a single, navigable index.
 
-## Local Usage
+## What It Does
 
-Install dependencies:
+VPN Meridian is an automated pipeline that:
 
-```bash
-npm ci
-```
+1. **Collects** free VPN server data from the VPN Gate API using concurrent workers
+2. **Tracks** server state incrementally — new, active, missing, inactive, pruned
+3. **Enriches** with MaxMind GeoLite2 GeoIP data (country, city, ASN)
+4. **Generates** OpenVPN configs, mihomo proxy YAML, and a client-side web dashboard
+5. **Publishes** everything to GitHub Pages on a 6-hour schedule
 
-Run a live collection:
+The web dashboard (`index.html`) is a self-contained SPA — no build step, no framework, no server. It fetches `data.json` at runtime and supports filtering, searching, and sorting across 20+ fields.
 
-```bash
-npm start
-```
-
-By default the scraper performs 1500 VPN Gate API requests locally and writes generated files under `public/`:
-
-- `public/json/data.json`
-- `public/json/changes.json`
-- `public/json/data.maxmind.json` when MaxMind export is enabled
-- `public/state/servers.json`
-- `public/configs/*.ovpn`
-- `public/mihomo_openvpn.yaml` when MaxMind export is enabled
-- `public/index.html`
-- `public/README.md`
-
-For a smaller local smoke run:
+## Quick Start
 
 ```bash
-TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json npm start
+# Build
+go build -o vpn-meridian ./cmd/vpn-meridian/
+
+# Run (default: 1500 API requests)
+./vpn-meridian
+
+# Smoke test (5 requests)
+TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json go run ./cmd/vpn-meridian/
 ```
 
-On PowerShell:
+## Architecture
 
-```powershell
-$env:TOTAL_REQUESTS='5'
-$env:OUTPUT_DIR='tmp/smoke'
-$env:STATE_PATH='tmp/smoke/state/servers.json'
-npm start
+```
+cmd/vpn-meridian/        CLI entry point
+internal/
+  config/                Environment variable configuration
+  scraper/               HTTP client + worker pool
+  csvparser/             VPN Gate CSV response parser
+  state/                 Incremental state management
+  output/                File writers (JSON, HTML, README, VPN configs)
+  maxmind/               GeoLite2 enrichment
+  mihomo/                mihomo YAML proxy config generation
+scripts/                 Python post-processing (MaxMind enrichment)
 ```
 
-## MaxMind and mihomo Export
+### Incremental State Model
 
-The scraper output can be enriched with MaxMind GeoLite2 Country, City, and ASN databases, then exported as a mihomo OpenVPN provider file:
+Each server gets a stable identity from hostname (preferred), IP+country, or config hash. The lifecycle:
+
+```
+new -> active -> missing (config kept) -> inactive (config dropped) -> pruned
+```
+
+- `ACTIVE_MISS_LIMIT` (default 12): ~3 days of missed scrapes before a server goes inactive
+- `PRUNE_MISS_LIMIT` (default 48): ~12 days before stale state is removed entirely
+- Content changes detected via `contentHash`; config identity via `configHash`
+
+### MaxMind Enrichment
 
 ```bash
 python -m pip install -r requirements-maxmind.txt
@@ -57,46 +67,63 @@ python scripts/enrich_maxmind.py \
   --maxmind-dir maxmind
 ```
 
-The MaxMind export is a metadata enrichment step. It does not replace `public/json/data.json`, does not change the incremental state model, does not connect to VPN servers, and does not claim VPN/proxy risk scoring beyond the GeoLite2 fields available in the databases.
-
-## Incremental Data Model
-
-Each scraped server is assigned a stable ID from its hostname, or from IP and country when the hostname is missing. The scraper reads the previous `state/servers.json` before merging the current collection.
-
-State fields include:
-
-- `firstSeen`
-- `lastSeen`
-- `lastChanged`
-- `seenCount`
-- `missCount`
-- `status`
-- `configHash`
-- `contentHash`
-- `openvpn_configdata_base64` while the server is still publishable
-
-The VPN Gate API can return a changing sample instead of a complete global list, so the public output is a passive rolling window, not just the latest response. Servers seen in the current collection are published as `active`; servers missed by the current scrape stay published as `missing` while their consecutive miss count is below `ACTIVE_MISS_LIMIT`. After that threshold they become `inactive` and are removed from `README.md`, `json/data.json`, and `configs/*.ovpn`. `PRUNE_MISS_LIMIT` controls when long-missing inactive entries are pruned from state entirely.
-
-State keeps the last known OpenVPN config only while a server is still publishable as `active` or `missing`. Once it becomes `inactive`, `state/servers.json` drops `openvpn_configdata_base64` and keeps only lifecycle metadata and hashes until the entry is pruned. When available, the previous `json/data.json` snapshot is used to hydrate configs for older state files that did not store them; missing entries without a cached config are treated as inactive because they cannot be safely republished. This allows the rolling window to accumulate servers from random API samples without keeping stale configs forever.
-
-The scraper does not actively test, ping, connect to, or speed-test VPN server IPs. Reported `ping` and `speed` values come from the VPN Gate API payload and should be treated as source-reported metadata.
-
-## GitHub Actions
-
-The workflow runs Node.js and Python tests on push and pull request. On push, manual dispatch, and schedule it also runs a live scrape, restores the previous state from `gh-pages`, generates a new output snapshot, enriches it with MaxMind data, uploads it as an artifact, and force-pushes the generated files to `gh-pages`. The generated `public/index.html` is the GitHub Pages homepage; configure Pages to serve from the `gh-pages` branch root. For this repository, the Pages URL is `https://6Kmfi6HP.github.io/Vpngate-Scraper/` after the branch is published and Pages is enabled.
-
-Default CI behavior:
-
-- Push or manual dispatch: 100 live requests by default.
-- Schedule: 200 live requests every 6 hours.
-- CI performs passive API collection only; it does not actively probe or connect to VPN server IPs.
-- With the default `ACTIVE_MISS_LIMIT=12` and 6-hour schedule, a server must be missed for roughly 3 days before it leaves the public output. With `PRUNE_MISS_LIMIT=48`, stale state is removed after roughly 12 days of consecutive misses.
-- Generated data is not committed to `master` or `main`.
-
-## Test
+Or use the built-in Go enrichment:
 
 ```bash
-npm test
-python -m pip install -r requirements-maxmind.txt
-python -m pytest -q
+go run ./cmd/vpn-meridian/ enrich \
+  --input public/json/data.json \
+  --output public/json/data.maxmind.json \
+  --mihomo-output public/mihomo_openvpn.yaml \
+  --maxmind-dir maxmind
 ```
+
+## Output Files
+
+| File | Description |
+|------|-------------|
+| `public/json/data.json` | Full server dataset with metadata |
+| `public/json/data.maxmind.json` | GeoIP-enriched server dataset |
+| `public/json/changes.json` | Diff of state transitions since last scrape |
+| `public/state/servers.json` | Incremental state file |
+| `public/configs/*.ovpn` | Individual OpenVPN config files |
+| `public/mihomo_openvpn.yaml` | mihomo proxy provider config |
+| `public/index.html` | Client-side web dashboard |
+
+## CI/CD
+
+GitHub Actions (`.github/workflows/main.yml`):
+
+- **validate** — Go build + vet on every push and PR
+- **collect** — Live scrape + MaxMind enrichment + publish to `gh-pages`
+- **test** — Builds OpenVPN tester, validates servers with mihomo
+- **Schedule** — Every 6 hours (200 requests). Manual dispatch: 100 requests.
+
+Generated output is force-pushed to the `gh-pages` branch. Configure GitHub Pages to serve from that branch.
+
+## Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TOTAL_REQUESTS` | 1500 | Number of API calls |
+| `WORKER_COUNT` | 8 | Max worker goroutines |
+| `OUTPUT_DIR` | `public` | Output directory |
+| `STATE_PATH` | `public/state/servers.json` | Incremental state file |
+| `ACTIVE_MISS_LIMIT` | 12 | Misses before server goes inactive |
+| `PRUNE_MISS_LIMIT` | 48 | Misses before pruning from state |
+| `REQUEST_TIMEOUT_MS` | 30000 | Per-request timeout |
+| `NO_PROGRESS` | (unset) | Set to `1` to hide progress bar |
+
+## Development
+
+```bash
+go build -o vpn-meridian ./cmd/vpn-meridian/  # Build
+go run ./cmd/vpn-meridian/                    # Run
+go vet ./...                                  # Lint
+go test ./...                                 # Tests
+```
+
+No build step required — pure Go with `embed` for the HTML template.
+
+## License
+
+See [LICENSE](./LICENSE) for details.

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/state"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/state"
 )
 
 //go:embed template.html
@@ -106,19 +106,37 @@ func (w *Writer) GenerateHomePage(result *state.MergeResult) error {
 		publishedDisplay = len(result.Servers)
 	}
 
+	type initialState struct {
+		Servers   json.RawMessage `json:"servers"`
+		Countries json.RawMessage `json:"countries"`
+		GeneratedAt string        `json:"generatedAt"`
+		Statistics  struct {
+			PublishedServers int `json:"publishedServers"`
+			ActiveServers    int `json:"activeServers"`
+			TotalCountries   int `json:"totalCountries"`
+			TotalRequests    int `json:"totalRequests"`
+		} `json:"statistics"`
+	}
+	initState := initialState{
+		Servers:     json.RawMessage(topJSONStr),
+		Countries:   json.RawMessage(countriesJSONStr),
+		GeneratedAt: result.GeneratedAtISO,
+	}
+	initState.Statistics.PublishedServers = publishedDisplay
+	initState.Statistics.ActiveServers = stats.ActiveServers
+	initState.Statistics.TotalCountries = countriesCount
+	initState.Statistics.TotalRequests = stats.TotalRequests
+	initStateJSON, _ := json.Marshal(initState)
+	initStateStr := "var __initialState = " + strings.ReplaceAll(string(initStateJSON), "</", `<\/`) + ";"
+
 	content := string(templateData)
+	content = strings.ReplaceAll(content, "{{INITIAL_STATE_JSON}}", initStateStr)
 	content = strings.ReplaceAll(content, "{{UPDATED_AT}}", escapeHTML(result.GeneratedAtISO))
 	content = strings.ReplaceAll(content, "{{PUBLISHED_SERVERS}}", escapeHTML(strconv.Itoa(publishedDisplay)))
 	content = strings.ReplaceAll(content, "{{ACTIVE_SERVERS}}", escapeHTML(strconv.Itoa(stats.ActiveServers)))
 	content = strings.ReplaceAll(content, "{{TOTAL_COUNTRIES}}", escapeHTML(strconv.Itoa(countriesCount)))
 	content = strings.ReplaceAll(content, "{{TOTAL_REQUESTS}}", escapeHTML(strconv.Itoa(stats.TotalRequests)))
-	content = strings.ReplaceAll(content, "{{INITIAL_SERVERS_JSON}}", topJSONStr)
-	content = strings.ReplaceAll(content, "{{INITIAL_COUNTRIES_JSON}}", countriesJSONStr)
 	content = strings.ReplaceAll(content, "{{GENERATED_AT_ISO}}", escapeHTML(result.GeneratedAtISO))
-	content = strings.ReplaceAll(content, "{{STATS_PUBLISHED}}", strconv.Itoa(publishedDisplay))
-	content = strings.ReplaceAll(content, "{{STATS_ACTIVE}}", strconv.Itoa(stats.ActiveServers))
-	content = strings.ReplaceAll(content, "{{STATS_COUNTRIES}}", strconv.Itoa(countriesCount))
-	content = strings.ReplaceAll(content, "{{STATS_REQUESTS}}", strconv.Itoa(stats.TotalRequests))
 	content = strings.ReplaceAll(content, "{{TOP_SERVERS_SIGNALS}}", topSignals.String())
 	content = strings.ReplaceAll(content, "{{SERVER_COUNT}}", strconv.Itoa(publishedDisplay))
 

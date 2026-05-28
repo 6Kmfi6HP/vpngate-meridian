@@ -1,4 +1,4 @@
-module github.com/6Kmfi6HP/vpngate-scraper/tester
+module github.com/6Kmfi6HP/vpn-meridian/tester
 
 go 1.24.0
 

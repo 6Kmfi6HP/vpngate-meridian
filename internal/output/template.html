@@ -2,8 +2,65 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VPN Gate Server Index</title>
+    <title>VPN Meridian — Global Free VPN Server Index</title>
+    <meta name="description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs. Updated every 6 hours with GeoIP enrichment.">
+    <meta name="keywords" content="VPN, free VPN, OpenVPN, VPN server list, VPN Gate, proxy, mihomo, GeoIP, global VPN">
+    <meta name="author" content="VPN Meridian">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://6kmfi6hp.github.io/vpn-meridian/">
+    <meta property="og:site_name" content="VPN Meridian">
+    <meta property="og:title" content="VPN Meridian — Global Free VPN Server Index">
+    <meta property="og:description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs. Updated every 6 hours.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://6kmfi6hp.github.io/vpn-meridian/">
+    <meta property="og:image" content="https://6kmfi6hp.github.io/vpn-meridian/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VPN Meridian — Global Free VPN Server Index">
+    <meta name="twitter:description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs.">
+    <meta name="twitter:image" content="https://6kmfi6hp.github.io/vpn-meridian/og-image.png">
+    <meta name="theme-color" content="#0f766e">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317211d'/%3E%3Cpath d='M18 20h28v8c0 11-5.7 17.7-14 21-8.3-3.3-14-10-14-21z' fill='%230f766e'/%3E%3Cpath d='M26 31h12v5H26z' fill='white'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317211d'/%3E%3Cpath d='M18 20h28v8c0 11-5.7 17.7-14 21-8.3-3.3-14-10-14-21z' fill='%230f766e'/%3E%3Cpath d='M26 31h12v5H26z' fill='white'/%3E%3C/svg%3E">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "VPN Meridian",
+        "url": "https://6kmfi6hp.github.io/vpn-meridian/",
+        "description": "Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs.",
+        "dateModified": "{{GENERATED_AT_ISO}}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "VPN Meridian"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Global Free VPN Server Index",
+        "description": "A regularly updated dataset of free VPN servers worldwide, including IP addresses, countries, speeds, and OpenVPN configurations.",
+        "url": "https://6kmfi6hp.github.io/vpn-meridian/json/data.json",
+        "dateModified": "{{GENERATED_AT_ISO}}",
+        "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "keywords": ["VPN", "free VPN", "OpenVPN", "server list", "proxy"],
+        "distribution": [
+            {
+                "@type": "DataDownload",
+                "name": "Server data (JSON)",
+                "encodingFormat": "application/json",
+                "contentUrl": "https://6kmfi6hp.github.io/vpn-meridian/json/data.json"
+            },
+            {
+                "@type": "DataDownload",
+                "name": "Server data with GeoIP (JSON)",
+                "encodingFormat": "application/json",
+                "contentUrl": "https://6kmfi6hp.github.io/vpn-meridian/json/data.maxmind.json"
+            }
+        ]
+    }
+    </script>
     <style>
         :root {
             color-scheme: light;
@@ -179,6 +236,7 @@
                 linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
             background-size: 34px 34px;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
             mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
         }
 
@@ -461,10 +519,10 @@
 <body>
     <header class="shell topbar">
         <div class="brand">
-            <div class="brand-mark" aria-hidden="true">VG</div>
+            <div class="brand-mark" aria-hidden="true">VM</div>
             <div>
-                <h1>VPN Gate Server Index</h1>
-                <p>Generated from the latest scraper snapshot</p>
+                <h1>VPN Meridian</h1>
+                <p>Global free VPN server index</p>
             </div>
         </div>
         <nav class="nav" aria-label="Generated output">
@@ -479,8 +537,8 @@
         <section class="shell hero" aria-labelledby="page-title">
             <div class="hero-copy">
                 <p class="eyebrow">Last generated {{UPDATED_AT}}</p>
-                <h2 id="page-title">Live VPN Gate output for GitHub Pages.</h2>
-                <p>Browse the generated server snapshot, inspect the latest rolling-window status, and download OpenVPN configs directly from the published Pages branch.</p>
+                <h2 id="page-title">Free VPN servers worldwide, updated every 6 hours.</h2>
+                <p>Browse the live server snapshot, filter by country or speed, and download OpenVPN configs directly.</p>
                 <div class="hero-actions">
                     <a class="button primary" href="json/data.json">Open data.json</a>
                     <a class="button" href="configs/">Browse configs</a>
@@ -572,19 +630,10 @@
         GitHub Actions publishes this directory to the gh-pages branch. Configure the repository Pages source to serve from gh-pages / root.
     </footer>
 
+    <script>{{INITIAL_STATE_JSON}}</script>
     <script>
         (function () {
-            var state = {
-                {{INITIAL_SERVERS_JSON}}
-                {{INITIAL_COUNTRIES_JSON}}
-                generatedAt: '{{UPDATED_AT}}',
-                statistics: {
-                    publishedServers: {{STATS_PUBLISHED}},
-                    activeServers: {{STATS_ACTIVE}},
-                    totalCountries: {{STATS_COUNTRIES}},
-                    totalRequests: {{STATS_REQUESTS}}
-                }
-            };
+            var state = __initialState;
             var elements = {};
 
             function number(value) {

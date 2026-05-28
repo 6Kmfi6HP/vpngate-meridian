@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/config"
-	"github.com/6Kmfi6HP/vpngate-scraper/internal/csvparser"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/config"
+	"github.com/6Kmfi6HP/vpn-meridian/internal/csvparser"
 )
 
 // WorkerResult holds results from a single worker.

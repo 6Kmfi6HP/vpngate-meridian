@@ -2,7 +2,7 @@
 node_modules/
 
 # Go binary (only ignore in root)
-/vpngate-scraper
+/vpn-meridian
 /testcheck
 
 # Logs
