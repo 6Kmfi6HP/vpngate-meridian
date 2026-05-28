@@ -224,7 +224,8 @@ def render_alive_yaml(
         p for p in all_proxies if p.get('name') in alive_names
     ]
     alive_proxies.sort(key=lambda p: alive_names[p['name']])
-    alive_proxies = alive_proxies[:max_alive]
+    if max_alive > 0:
+        alive_proxies = alive_proxies[:max_alive]
 
     lines = ['proxies:']
     for proxy in alive_proxies:
@@ -354,7 +355,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         '--max-alive',
         type=int,
         default=DEFAULT_MAX_ALIVE,
-        help=f'Max alive proxies in --alive-mihomo output (default: {DEFAULT_MAX_ALIVE})',
+        help=f'Max alive proxies in --alive-mihomo output, 0 for no limit (default: {DEFAULT_MAX_ALIVE})',
     )
     parser.add_argument(
         '--timeout',
