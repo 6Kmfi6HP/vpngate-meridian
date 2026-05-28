@@ -149,6 +149,11 @@ def run_tester(
         )
         return None
 
+    # Log Go tester stderr (progress + error breakdown) for CI diagnostics.
+    if result.stderr.strip():
+        for line in result.stderr.strip().splitlines():
+            logger.info('[tester] %s', line)
+
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as exc:
