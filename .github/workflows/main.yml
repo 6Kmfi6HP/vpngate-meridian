@@ -178,12 +178,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Use Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache-dependency-path: scripts/tester/go.sum
+
+      - name: Build OpenVPN tester
+        run: go build -o scripts/tester/tester ./scripts/tester/
+
       - name: Use Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Install testing dependencies
+      - name: Install dependencies
         run: python -m pip install pyyaml
 
       - name: Download generated artifact
@@ -201,7 +210,8 @@ jobs:
             --alive-mihomo public/mihomo_tested_openvpn.yaml \
             --results-json public/json/test_results.json \
             --max-alive 100 \
-            --batch-size 30
+            --timeout 10 \
+            --workers 20
 
       - name: Validate test output
         run: |
