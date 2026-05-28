@@ -47,7 +47,6 @@ temp/
 *.tmp
 *.bak
 # MaxMind database files (downloaded at build time)
-/maxmind/
 *.mmdb
 
 # Go tester binary (built locally or in CI)
