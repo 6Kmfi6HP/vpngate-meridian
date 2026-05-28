@@ -1,8 +1,8 @@
 # Dependencies
 node_modules/
 
-# Go binary
-vpngate-scraper
+# Go binary (only ignore in root)
+/vpngate-scraper
 
 # Logs
 logs/
