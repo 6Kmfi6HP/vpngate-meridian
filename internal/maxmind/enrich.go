@@ -374,6 +374,7 @@ type openvpnConfig struct {
 }
 
 func BuildMihomoConfig(dataPath, outputPath string) error {
+	// Collect servers from data.json
 	data, err := os.ReadFile(dataPath)
 	if err != nil {
 		return fmt.Errorf("read data: %w", err)
@@ -384,10 +385,47 @@ func BuildMihomoConfig(dataPath, outputPath string) error {
 		return fmt.Errorf("parse data: %w", err)
 	}
 
+	// Also load state file which contains all servers (including inactive)
+	// State file path is derived from data.json path: ../state/servers.json
+	statePath := filepath.Join(filepath.Dir(dataPath), "..", "state", "servers.json")
+	stateServers := loadStateServers(statePath)
+
+	// Merge: data.json servers + state servers (state has inactive ones too)
+	seen := make(map[string]bool)
+	merged := make([]InputServer, 0, len(input.Data.Servers)+len(stateServers))
+
+	for _, s := range input.Data.Servers {
+		key := s.ID
+		if key == "" {
+			key = s.Hostname
+		}
+		if key == "" {
+			key = s.IP
+		}
+		if key != "" {
+			seen[key] = true
+		}
+		merged = append(merged, s)
+	}
+
+	for _, s := range stateServers {
+		key := s.ID
+		if key == "" {
+			key = s.Hostname
+		}
+		if key == "" {
+			key = s.IP
+		}
+		if key == "" || seen[key] {
+			continue
+		}
+		merged = append(merged, s)
+	}
+
 	var sb strings.Builder
 	sb.WriteString("proxies:\n")
 
-	for _, s := range input.Data.Servers {
+	for _, s := range merged {
 		if s.OpenVPNConfigDataBase64 == "" {
 			continue
 		}
@@ -436,6 +474,54 @@ func BuildMihomoConfig(dataPath, outputPath string) error {
 	}
 
 	return atomicWriteText(outputPath, sb.String())
+}
+
+// stateFileData represents the state file structure.
+type stateFileData struct {
+	Servers map[string]*stateServerEntry `json:"servers"`
+}
+
+type stateServerEntry struct {
+	ID                      string `json:"id"`
+	Hostname                string `json:"hostname,omitempty"`
+	IP                      string `json:"ip,omitempty"`
+	CountryShort            string `json:"countryshort"`
+	CountryLong             string `json:"countrylong"`
+	Status                  string `json:"status"`
+	OpenVPNConfigDataBase64 string `json:"openvpn_configdata_base64,omitempty"`
+}
+
+// loadStateServers reads the state file and returns servers that have config data.
+func loadStateServers(statePath string) []InputServer {
+	data, err := os.ReadFile(statePath)
+	if err != nil {
+		return nil
+	}
+
+	var sf stateFileData
+	if err := json.Unmarshal(data, &sf); err != nil {
+		return nil
+	}
+
+	var servers []InputServer
+	for _, s := range sf.Servers {
+		if s.OpenVPNConfigDataBase64 == "" {
+			continue
+		}
+		// Skip pruned servers (shouldn't exist in state, but guard anyway)
+		if s.Status == "pruned" {
+			continue
+		}
+		servers = append(servers, InputServer{
+			ID:                      s.ID,
+			Hostname:                s.Hostname,
+			IP:                      s.IP,
+			CountryShort:            s.CountryShort,
+			CountryLong:             s.CountryLong,
+			OpenVPNConfigDataBase64: s.OpenVPNConfigDataBase64,
+		})
+	}
+	return servers
 }
 
 func decodeAndParseConfig(encoded string) (*openvpnConfig, error) {

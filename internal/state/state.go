@@ -378,9 +378,6 @@ func (m *StateManager) Merge(
 
 		if prev.MissCount >= m.activeMissLimit {
 			prev.Status = "inactive"
-			// Remove config from state
-			config := prev.OpenVPNConfigDataBase64
-			prev.OpenVPNConfigDataBase64 = ""
 			changes.Inactive = append(changes.Inactive, ChangeSummary{
 				ID:               prev.ID,
 				Hostname:         prev.Hostname,
@@ -390,7 +387,6 @@ func (m *StateManager) Merge(
 				Status:           prev.Status,
 				ConfigFilename:   prev.ConfigFilename,
 			})
-			_ = config // previously removed config data
 		} else {
 			switch prev.Status {
 			case "active":
