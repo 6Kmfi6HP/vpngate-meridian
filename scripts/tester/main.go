@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,8 +33,18 @@ type ProxyResult struct {
 	Name      string `json:"name"`
 	Alive     bool   `json:"alive"`
 	LatencyMs int    `json:"latencyMs,omitempty"`
+	TestURL   string `json:"testUrl,omitempty"`
 	Error     string `json:"error,omitempty"`
 }
+
+type probeResult struct {
+	alive   bool
+	latency time.Duration
+	url     string
+	err     string
+}
+
+const defaultTestURLs = "http://gstatic.com/generate_204"
 
 // TestStats aggregates all test results.
 type TestStats struct {
@@ -57,7 +69,9 @@ func main() {
 	inputFile := flag.String("input", "", "Input mihomo YAML file (default: stdin)")
 	workers := flag.Int("workers", runtime.NumCPU()*2, "Concurrent workers")
 	timeoutSec := flag.Int("timeout", 10, "Per-proxy test timeout (seconds)")
-	testURL := flag.String("test-url", "http://www.gstatic.com/generate_204", "Test URL for latency measurement")
+	testURL := flag.String("test-url", defaultTestURLs, "Comma or whitespace separated test URLs for latency measurement")
+	attempts := flag.Int("attempts", 1, "Passes over the test URL list per proxy")
+	shuffle := flag.Bool("shuffle", true, "Shuffle test order while preserving output order")
 	flag.Parse()
 
 	// Read YAML from file or stdin.
@@ -82,7 +96,15 @@ func main() {
 		log.Fatal("No proxies found in YAML")
 	}
 
-	log.Printf("Testing %d proxies with %d workers ...", len(proxies), *workers)
+	testURLs := parseTestURLs(*testURL)
+	if len(testURLs) == 0 {
+		log.Fatal("No test URLs configured")
+	}
+	if *attempts < 1 {
+		*attempts = 1
+	}
+
+	log.Printf("Testing %d proxies with %d workers, %d URL(s), %d attempt(s) ...", len(proxies), *workers, len(testURLs), *attempts)
 
 	timeout := time.Duration(*timeoutSec) * time.Second
 	results := make([]ProxyResult, len(proxies))
@@ -90,15 +112,25 @@ func main() {
 
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, *workers)
+	order := make([]int, len(proxies))
+	for i := range order {
+		order[i] = i
+	}
+	if *shuffle {
+		rand.Shuffle(len(order), func(i, j int) {
+			order[i], order[j] = order[j], order[i]
+		})
+	}
 
-	for i, p := range proxies {
+	for _, i := range order {
+		p := proxies[i]
 		wg.Add(1)
 		go func(idx int, mapping map[string]any) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			r := testSingle(context.Background(), mapping, timeout, *testURL)
+			r := testSingle(context.Background(), mapping, timeout, testURLs, *attempts)
 			results[idx] = r
 			progress <- struct{}{}
 		}(i, p)
@@ -154,7 +186,27 @@ func main() {
 	}
 }
 
-func testSingle(ctx context.Context, mapping map[string]any, timeout time.Duration, testURL string) ProxyResult {
+func parseTestURLs(raw string) []string {
+	parts := strings.FieldsFunc(raw, func(r rune) bool {
+		return r == ',' || r == '\n' || r == '\r' || r == '\t' || r == ' '
+	})
+	urls := make([]string, 0, len(parts))
+	seen := make(map[string]struct{}, len(parts))
+	for _, part := range parts {
+		u := strings.TrimSpace(part)
+		if u == "" {
+			continue
+		}
+		if _, ok := seen[u]; ok {
+			continue
+		}
+		seen[u] = struct{}{}
+		urls = append(urls, u)
+	}
+	return urls
+}
+
+func testSingle(ctx context.Context, mapping map[string]any, timeout time.Duration, testURLs []string, attempts int) ProxyResult {
 	name, _ := mapping["name"].(string)
 	if name == "" {
 		name = "unknown"
@@ -201,30 +253,75 @@ func testSingle(ctx context.Context, mapping map[string]any, timeout time.Durati
 	}
 	defer client.CloseIdleConnections()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", testURL, nil)
-	if err != nil {
-		return ProxyResult{Name: name, Alive: false, Error: fmt.Sprintf("request error: %v", err)}
+	var last probeResult
+	if attempts < 1 {
+		attempts = 1
 	}
-
-	start := time.Now()
-	resp, err := client.Do(req)
-	if err != nil {
-		return ProxyResult{Name: name, Alive: false, Error: err.Error()}
-	}
-	defer resp.Body.Close()
-	_, _ = io.Copy(io.Discard, resp.Body)
-
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		return ProxyResult{
-			Name:      name,
-			Alive:     true,
-			LatencyMs: int(time.Since(start).Milliseconds()),
+	for i := 0; i < attempts; i++ {
+		last = probeHTTP(ctx, client, testURLs, timeout)
+		if last.alive {
+			return ProxyResult{
+				Name:      name,
+				Alive:     true,
+				LatencyMs: int(last.latency.Milliseconds()),
+				TestURL:   last.url,
+			}
 		}
 	}
+
 	return ProxyResult{
 		Name:  name,
 		Alive: false,
-		Error: fmt.Sprintf("HTTP %d", resp.StatusCode),
+		Error: last.err,
+	}
+}
+
+func probeHTTP(ctx context.Context, client *http.Client, testURLs []string, timeout time.Duration) probeResult {
+	if len(testURLs) == 0 {
+		return probeResult{err: "no test URLs configured"}
+	}
+
+	errors := make([]string, 0, len(testURLs))
+	for _, testURL := range testURLs {
+		reqCtx, cancel := context.WithTimeout(ctx, timeout)
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, testURL, nil)
+		if err != nil {
+			cancel()
+			errors = append(errors, fmt.Sprintf("%s: request error: %v", testURL, err))
+			continue
+		}
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36")
+		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+		req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+		req.Header.Set("Connection", "close")
+
+		start := time.Now()
+		resp, err := client.Do(req)
+		latency := time.Since(start)
+		if err != nil {
+			cancel()
+			errors = append(errors, fmt.Sprintf("%s: %v", testURL, err))
+			if ctx.Err() != nil {
+				break
+			}
+			continue
+		}
+		_, _ = io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		cancel()
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			return probeResult{
+				alive:   true,
+				latency: latency,
+				url:     testURL,
+			}
+		}
+		errors = append(errors, fmt.Sprintf("%s: HTTP %d", testURL, resp.StatusCode))
+	}
+
+	return probeResult{
+		err: strings.Join(errors, "; "),
 	}
 }
 

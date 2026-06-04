@@ -19,6 +19,7 @@ type ProxyResult struct {
 	Name      string `json:"name"`
 	Alive     bool   `json:"alive"`
 	LatencyMs int    `json:"latencyMs,omitempty"`
+	TestURL   string `json:"testUrl,omitempty"`
 	Error     string `json:"error,omitempty"`
 }
 
@@ -55,27 +56,28 @@ type TestDataEntry struct {
 	Alive     bool   `json:"alive"`
 	TestedAt  string `json:"testedAt"`
 	LatencyMs *int   `json:"latencyMs,omitempty"`
+	TestURL   string `json:"testUrl,omitempty"`
 	Error     string `json:"error,omitempty"`
 }
 
 type DataFile struct {
-	GeneratedAt    int64              `json:"generatedAt"`
-	GeneratedAtISO string             `json:"generatedAtIso"`
-	Data           DataFileContent    `json:"data"`
-	Statistics     map[string]any     `json:"statistics,omitempty"`
+	GeneratedAt    int64           `json:"generatedAt"`
+	GeneratedAtISO string          `json:"generatedAtIso"`
+	Data           DataFileContent `json:"data"`
+	Statistics     map[string]any  `json:"statistics,omitempty"`
 }
 
 type DataFileContent struct {
-	Servers   []DataServer        `json:"servers"`
-	Countries map[string]string   `json:"countries"`
+	Servers   []DataServer      `json:"servers"`
+	Countries map[string]string `json:"countries"`
 }
 
 type TestedDataFile struct {
-	GeneratedAt    int64              `json:"generatedAt"`
-	GeneratedAtISO string             `json:"generatedAtIso"`
-	Data           DataFileContent    `json:"data"`
-	Statistics     map[string]any     `json:"statistics,omitempty"`
-	Test           *TestDataMeta      `json:"test,omitempty"`
+	GeneratedAt    int64           `json:"generatedAt"`
+	GeneratedAtISO string          `json:"generatedAtIso"`
+	Data           DataFileContent `json:"data"`
+	Statistics     map[string]any  `json:"statistics,omitempty"`
+	Test           *TestDataMeta   `json:"test,omitempty"`
 }
 
 type TestDataMeta struct {
@@ -96,29 +98,35 @@ func main() {
 	maxAlive := flag.Int("max-alive", getEnvInt("TEST_MAX_ALIVE", 0), "Max alive proxies (0 = no limit)")
 	timeout := flag.Int("timeout", getEnvInt("TEST_TIMEOUT", 10), "Per-proxy timeout (seconds)")
 	workers := flag.Int("workers", getEnvInt("TEST_WORKERS", 20), "Concurrent workers")
+	testURL := flag.String("test-url", getEnvStr("TEST_URL", ""), "Comma or whitespace separated test URLs for latency measurement")
+	attempts := flag.Int("attempts", getEnvInt("TEST_ATTEMPTS", 1), "Passes over the test URL list per proxy")
+	shuffle := flag.Bool("shuffle", getEnvBool("TEST_SHUFFLE", true), "Shuffle test order while preserving output order")
 	flag.Parse()
 
 	testerDir := filepath.Join("scripts", "tester")
 	testerBinary := filepath.Join(testerDir, "tester")
-
-	if !fileExists(testerBinary) {
-		fmt.Println("Building Go tester binary...")
-		cmd := exec.Command("go", "build", "-tags", "with_gvisor", "-o", testerBinary, ".")
-		cmd.Dir = testerDir
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to build tester: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Println("Tester built successfully")
+	testerBinaryAbs, err := filepath.Abs(testerBinary)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to resolve tester path: %v\n", err)
+		os.Exit(1)
 	}
+
+	fmt.Println("Building Go tester binary...")
+	cmd := exec.Command("go", "build", "-tags", "with_gvisor", "-o", testerBinaryAbs, ".")
+	cmd.Dir = testerDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to build tester: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("Tester built successfully")
 
 	fmt.Println("Running OpenVPN server tests...")
 	fmt.Printf("Input: %s\n", *inputFile)
-	fmt.Printf("Timeout: %ds, Workers: %d\n", *timeout, *workers)
+	fmt.Printf("Timeout: %ds, Workers: %d, Attempts: %d, Shuffle: %v\n", *timeout, *workers, *attempts, *shuffle)
 
-	testOutput, err := runTester(testerBinary, *inputFile, *timeout, *workers)
+	testOutput, err := runTester(testerBinaryAbs, *inputFile, *timeout, *workers, *testURL, *attempts, *shuffle)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Tester failed: %v\n", err)
 		os.Exit(1)
@@ -164,12 +172,19 @@ func main() {
 	fmt.Printf("  Alive mihomo: %s\n", *aliveMihomo)
 }
 
-func runTester(binary, inputFile string, timeout, workers int) (*TestOutput, error) {
-	cmd := exec.Command(binary,
+func runTester(binary, inputFile string, timeout, workers int, testURL string, attempts int, shuffle bool) (*TestOutput, error) {
+	args := []string{
 		"--input", inputFile,
 		"--timeout", strconv.Itoa(timeout),
 		"--workers", strconv.Itoa(workers),
-	)
+		"--attempts", strconv.Itoa(attempts),
+		"--shuffle", strconv.FormatBool(shuffle),
+	}
+	if strings.TrimSpace(testURL) != "" {
+		args = append(args, "--test-url", testURL)
+	}
+
+	cmd := exec.Command(binary, args...)
 	cmd.Stderr = os.Stderr
 
 	out, err := cmd.Output()
@@ -238,6 +253,7 @@ func generateTestedData(data *DataFile, testOutput *TestOutput, proxyToServer ma
 			}
 			if r.Alive {
 				entry.LatencyMs = &r.LatencyMs
+				entry.TestURL = r.TestURL
 			} else if r.Error != "" {
 				entry.Error = r.Error
 			}
@@ -390,11 +406,6 @@ func atomicWriteText(path, content string) error {
 	return os.Rename(tmp, path)
 }
 
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir()
-}
-
 func getEnvStr(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -406,6 +417,15 @@ func getEnvInt(key string, fallback int) int {
 	if v := os.Getenv(key); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			return n
+		}
+	}
+	return fallback
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	if v := os.Getenv(key); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			return b
 		}
 	}
 	return fallback

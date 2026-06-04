@@ -145,9 +145,6 @@ jobs:
           go-version: '1.24'
           cache-dependency-path: go.sum
 
-      - name: Build OpenVPN tester
-        run: cd scripts/tester && go build -tags with_gvisor -o tester .
-
       - name: Build test check
         run: go build -o testcheck ./cmd/testcheck/
 
@@ -167,7 +164,9 @@ jobs:
             --results-json public/json/test_results.json \
             --max-alive 0 \
             --timeout 10 \
-            --workers 20
+            --workers 40 \
+            --attempts 1 \
+            --test-url "http://gstatic.com/generate_204"
 
       - name: Validate test output
         run: |

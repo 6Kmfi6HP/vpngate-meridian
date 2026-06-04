@@ -13,10 +13,10 @@ import (
 )
 
 type CountryRecord struct {
-	IsoCode       string            `json:"iso_code,omitempty"`
-	Name          string            `json:"name,omitempty"`
-	Names         map[string]string `json:"names,omitempty"`
-	IsInEU        bool              `json:"is_in_european_union,omitempty"`
+	IsoCode string            `json:"iso_code,omitempty"`
+	Name    string            `json:"name,omitempty"`
+	Names   map[string]string `json:"names,omitempty"`
+	IsInEU  bool              `json:"is_in_european_union,omitempty"`
 }
 
 type ContinentRecord struct {
@@ -50,14 +50,14 @@ type ASNRecord struct {
 }
 
 type MaxMindRecord struct {
-	Country           *CountryRecord   `json:"country,omitempty"`
-	RegisteredCountry *CountryRecord   `json:"registered_country,omitempty"`
-	Continent         *ContinentRecord `json:"continent,omitempty"`
-	City              *CityRecord      `json:"city,omitempty"`
+	Country           *CountryRecord     `json:"country,omitempty"`
+	RegisteredCountry *CountryRecord     `json:"registered_country,omitempty"`
+	Continent         *ContinentRecord   `json:"continent,omitempty"`
+	City              *CityRecord        `json:"city,omitempty"`
 	Subdivision       *SubdivisionRecord `json:"subdivision,omitempty"`
-	Location          *LocationRecord  `json:"location,omitempty"`
-	Postal            *PostalRecord    `json:"postal,omitempty"`
-	ASN               *ASNRecord       `json:"asn,omitempty"`
+	Location          *LocationRecord    `json:"location,omitempty"`
+	Postal            *PostalRecord      `json:"postal,omitempty"`
+	ASN               *ASNRecord         `json:"asn,omitempty"`
 }
 
 type PostalRecord struct {
@@ -86,10 +86,10 @@ type EnrichedServer struct {
 }
 
 type DataInput struct {
-	GeneratedAt    int64              `json:"generatedAt"`
-	GeneratedAtISO string             `json:"generatedAtIso"`
-	Data           DataContent        `json:"data"`
-	Statistics     map[string]any     `json:"statistics"`
+	GeneratedAt    int64          `json:"generatedAt"`
+	GeneratedAtISO string         `json:"generatedAtIso"`
+	Data           DataContent    `json:"data"`
+	Statistics     map[string]any `json:"statistics"`
 }
 
 type DataContent struct {
@@ -118,15 +118,15 @@ type InputServer struct {
 }
 
 type DataOutput struct {
-	GeneratedAt    int64              `json:"generatedAt"`
-	GeneratedAtISO string             `json:"generatedAtIso"`
-	Data           DataContentOut     `json:"data"`
-	Statistics     map[string]any     `json:"statistics"`
-	MaxMind        *MaxMindMeta       `json:"maxmind,omitempty"`
+	GeneratedAt    int64          `json:"generatedAt"`
+	GeneratedAtISO string         `json:"generatedAtIso"`
+	Data           DataContentOut `json:"data"`
+	Statistics     map[string]any `json:"statistics"`
+	MaxMind        *MaxMindMeta   `json:"maxmind,omitempty"`
 }
 
 type DataContentOut struct {
-	Servers   []EnrichedServer `json:"servers"`
+	Servers   []EnrichedServer  `json:"servers"`
 	Countries map[string]string `json:"countries"`
 }
 
@@ -364,7 +364,7 @@ func atomicWriteJSON(path string, data any) error {
 type openvpnConfig struct {
 	remoteHost string
 	remotePort int
-	isUDP      bool
+	proto      string
 	cipher     string
 	auth       string
 	ca         string
@@ -440,7 +440,8 @@ func BuildMihomoConfig(dataPath, outputPath string) error {
 		sb.WriteString("    type: openvpn\n")
 		sb.WriteString(fmt.Sprintf("    server: %q\n", config.remoteHost))
 		sb.WriteString(fmt.Sprintf("    port: %d\n", config.remotePort))
-		sb.WriteString(fmt.Sprintf("    udp: %v\n", config.isUDP))
+		sb.WriteString(fmt.Sprintf("    proto: %q\n", config.proto))
+		sb.WriteString("    udp: true\n")
 		if config.cipher != "" {
 			sb.WriteString(fmt.Sprintf("    cipher: %q\n", config.cipher))
 		}
@@ -530,7 +531,7 @@ func decodeAndParseConfig(encoded string) (*openvpnConfig, error) {
 		return nil, fmt.Errorf("decode base64: %w", err)
 	}
 
-	config := &openvpnConfig{remotePort: 1194, isUDP: true}
+	config := &openvpnConfig{remotePort: 1194, proto: "udp"}
 	lines := strings.Split(string(data), "\n")
 
 	for _, line := range lines {
@@ -550,7 +551,7 @@ func decodeAndParseConfig(encoded string) (*openvpnConfig, error) {
 			}
 		case strings.HasPrefix(line, "proto "):
 			proto := strings.TrimSpace(strings.TrimPrefix(line, "proto"))
-			config.isUDP = proto == "udp"
+			config.proto = normalizeOpenVPNProto(proto)
 		case strings.HasPrefix(line, "cipher "):
 			config.cipher = strings.TrimSpace(strings.TrimPrefix(line, "cipher"))
 		case strings.HasPrefix(line, "auth "):
@@ -567,6 +568,17 @@ func decodeAndParseConfig(encoded string) (*openvpnConfig, error) {
 	}
 
 	return config, nil
+}
+
+func normalizeOpenVPNProto(proto string) string {
+	switch strings.ToLower(strings.TrimSpace(proto)) {
+	case "tcp", "tcp-client", "tcp4", "tcp4-client", "tcp6", "tcp6-client":
+		return "tcp"
+	case "udp", "udp4", "udp6":
+		return "udp"
+	default:
+		return strings.ToLower(strings.TrimSpace(proto))
+	}
 }
 
 func extractBlock(lines []string, tag string) string {
