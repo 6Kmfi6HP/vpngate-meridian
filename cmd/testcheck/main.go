@@ -194,7 +194,11 @@ func runTester(binary, inputFile string, timeout, workers int, testURL string, a
 
 	var result TestOutput
 	if err := json.Unmarshal(out, &result); err != nil {
-		return nil, fmt.Errorf("parse tester output: %w", err)
+		preview := out
+		if len(preview) > 200 {
+			preview = preview[:200]
+		}
+		return nil, fmt.Errorf("parse tester output: %w (output %d bytes, starts: %q)", err, len(out), preview)
 	}
 	return &result, nil
 }
