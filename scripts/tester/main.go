@@ -20,8 +20,19 @@ import (
 
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/constant"
+	mihomolog "github.com/metacubex/mihomo/log"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
+
+// init keeps the tester's stdout reserved for JSON output. mihomo's log
+// package points logrus at os.Stdout in its own init, so any internal
+// warning (e.g. OpenVPN stack device errors) would corrupt the JSON that
+// testcheck parses. Silence mihomo's logger and redirect logrus to stderr.
+func init() {
+	mihomolog.SetLevel(mihomolog.SILENT)
+	logrus.SetOutput(os.Stderr)
+}
 
 // MihomoConfig matches the mihomo YAML proxy list.
 type MihomoConfig struct {
