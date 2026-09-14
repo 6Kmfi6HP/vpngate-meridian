@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-VPN Gate scraper that collects free VPN server data, enriches with GeoIP information, and generates web output. **Pure Go project** with Python post-processing for MaxMind enrichment.
+VPN Gate scraper that collects free VPN server data, enriches with GeoIP information, and generates web output. **Pure Go project**; MaxMind enrichment runs as the built-in `enrich` subcommand.
 
 ## Build & Test Commands
 
@@ -34,8 +34,7 @@ internal/
   csvparser/             # VPN Gate CSV response parser
   state/                 # Incremental state management
   output/                # File writers (JSON, HTML, README)
-  maxmind/               # GeoLite2 enrichment
-  mihomo/                # mihomo YAML generation
+  maxmind/               # GeoLite2 enrichment; mihomo YAML generation lives here (enrich.go)
 ```
 
 ## Commit Messages
@@ -60,6 +59,6 @@ GitHub Actions workflow at `.github/workflows/main.yml`:
 ## Important Notes
 
 - **Generated output goes to `gh-pages` branch**, not main
-- **MaxMind enrichment** currently uses Python scripts (transitional)
+- **MaxMind enrichment** uses the built-in Go subcommand `vpn-meridian enrich` (no Python)
 - **State file** is critical for incremental scraping - never delete without understanding lifecycle
 - **Atomic writes** for all output files (temp + rename)

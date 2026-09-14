@@ -39,9 +39,8 @@ internal/
   csvparser/             VPN Gate CSV response parser
   state/                 Incremental state management
   output/                File writers (JSON, HTML, README, VPN configs)
-  maxmind/               GeoLite2 enrichment
-  mihomo/                mihomo YAML proxy config generation
-scripts/                 Python post-processing (MaxMind enrichment)
+  maxmind/               GeoLite2 enrichment + mihomo YAML generation (enrich.go)
+scripts/tester/          OpenVPN server tester (Go)
 ```
 
 ### Incremental State Model
@@ -49,7 +48,7 @@ scripts/                 Python post-processing (MaxMind enrichment)
 Each server gets a stable identity from hostname (preferred), IP+country, or config hash. The lifecycle:
 
 ```
-new -> active -> missing (config kept) -> inactive (config dropped) -> pruned
+new -> active -> missing (config kept) -> inactive (config kept) -> pruned (config dropped)
 ```
 
 - `ACTIVE_MISS_LIMIT` (default 12): ~3 days of missed scrapes before a server goes inactive
@@ -58,16 +57,7 @@ new -> active -> missing (config kept) -> inactive (config dropped) -> pruned
 
 ### MaxMind Enrichment
 
-```bash
-python -m pip install -r requirements-maxmind.txt
-python scripts/enrich_maxmind.py \
-  --input public/json/data.json \
-  --output public/json/data.maxmind.json \
-  --mihomo-output public/mihomo_openvpn.yaml \
-  --maxmind-dir maxmind
-```
-
-Or use the built-in Go enrichment:
+Runs as a built-in Go subcommand:
 
 ```bash
 go run ./cmd/vpn-meridian/ enrich \

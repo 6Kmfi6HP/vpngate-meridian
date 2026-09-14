@@ -22,8 +22,7 @@ TOTAL_REQUESTS=5 OUTPUT_DIR=tmp/smoke STATE_PATH=tmp/smoke/state/servers.json go
 ### MaxMind enrichment
 
 ```bash
-python -m pip install -r requirements-maxmind.txt
-python scripts/enrich_maxmind.py \
+go run ./cmd/vpn-meridian/ enrich \
   --input public/json/data.json \
   --output public/json/data.maxmind.json \
   --mihomo-output public/mihomo_openvpn.yaml \
@@ -32,7 +31,7 @@ python scripts/enrich_maxmind.py \
 
 ## Architecture
 
-**Pure Go project** with Python post-processing for MaxMind enrichment.
+**Pure Go project.** MaxMind enrichment is built in as the `enrich` subcommand.
 
 ### Scraper (`cmd/vpn-meridian/` + `internal/`)
 
@@ -42,28 +41,22 @@ python scripts/enrich_maxmind.py \
 - **internal/csvparser/** — Parses VPN Gate CSV API response into `Server` structs.
 - **internal/state/** — Incremental state model. Merges current scrape with previous state, tracks lifecycle.
 - **internal/output/** — File writers: JSON, HTML (via embedded template), README, VPN configs.
-- **internal/maxmind/** — MaxMind GeoLite2 enrichment (GeoIP country/city/ASN annotations).
-- **internal/mihomo/** — mihomo YAML proxy config generation.
+- **internal/maxmind/** — MaxMind GeoLite2 enrichment (GeoIP country/city/ASN annotations) and mihomo YAML proxy config generation (`BuildMihomoConfig` in `enrich.go`).
 
 **Key dedup logic**: `buildServerIdentity()` creates a stable server ID from hostname first, falls back to ip+country, then to config hash. When two raw entries produce the same ID, `selectPreferredServer()` keeps the one with higher speed.
 
 ### Incremental State Model
 
 Each server identified by stable ID (from hostname, or ip+country, or config hash). Lifecycle:
-`new → active → missing (config kept) → inactive (config dropped) → pruned (removed from state)`
+`new → active → missing (config kept) → inactive (config kept) → pruned (removed from state)`
 
-Servers not seen in current scrape increment `missCount`. When `missCount >= ACTIVE_MISS_LIMIT` they become inactive (config deleted from state). When `missCount >= PRUNE_MISS_LIMIT` they're pruned entirely. Previous `data.json` snapshot hydrates configs for state entries that don't store them.
+Servers not seen in current scrape increment `missCount`. When `missCount >= ACTIVE_MISS_LIMIT` they become inactive; the config is retained in state so mihomo YAML generation (`loadStateServers` in `internal/maxmind/enrich.go`) can still merge it. When `missCount >= PRUNE_MISS_LIMIT` they're pruned entirely (config dropped). Previous `data.json` snapshot hydrates configs for state entries that don't store them.
 
 **Hash distinction**: `contentHash` (full server metadata, used to detect changes) vs `configHash` (just the OpenVPN config, used for config identity). A server is "updated" only when contentHash changes.
 
 ### Changes tracking (`changes.json`)
 
 Each scrape produces a diff of the state transition: `added`, `updated`, `recovered` (missing→active), `missing` (active→missing), `inactive` (missing→inactive), `pruned` (removed from state entirely), `unchangedCount`.
-
-### MaxMind (`scripts/` + `tests/`)
-
-- **scripts/enrich_maxmind.py** — reads `data.json`, annotates servers with GeoLite2 Country/City/ASN data, generates `mihomo_openvpn.yaml`. Uses atomic writes via temp files.
-- **tests/test_enrich_maxmind.py** — pytest tests that load the script as a module.
 
 ### CI/CD (`.github/workflows/main.yml`)
 
