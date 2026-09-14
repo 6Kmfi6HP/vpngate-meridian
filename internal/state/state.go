@@ -37,25 +37,7 @@ type ServerState struct {
 }
 
 // PublishedServer is a server included in the output data.
-type PublishedServer struct {
-	ID                       string `json:"id"`
-	Hostname                 string `json:"hostname,omitempty"`
-	IP                       string `json:"ip,omitempty"`
-	CountryShort             string `json:"countryshort"`
-	CountryLong              string `json:"countrylong"`
-	Ping                     string `json:"ping,omitempty"`
-	Speed                    string `json:"speed,omitempty"`
-	Status                   string `json:"status"`
-	FirstSeen                int64  `json:"firstSeen"`
-	LastSeen                 int64  `json:"lastSeen"`
-	LastChanged              int64  `json:"lastChanged"`
-	SeenCount                int    `json:"seenCount"`
-	MissCount                int    `json:"missCount"`
-	ConfigHash               string `json:"configHash"`
-	ContentHash              string `json:"contentHash"`
-	ConfigFilename           string `json:"configFilename,omitempty"`
-	OpenVPNConfigDataBase64  string `json:"openvpn_configdata_base64,omitempty"`
-}
+type PublishedServer = ServerState
 
 // ChangeSummary summarizes a server change.
 type ChangeSummary struct {

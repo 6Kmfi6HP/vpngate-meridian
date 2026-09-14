@@ -64,25 +64,11 @@ type PostalRecord struct {
 	Code string `json:"code,omitempty"`
 }
 
+// EnrichedServer carries the published server fields (promoted from the
+// embedded InputServer, so JSON stays flat) plus the MaxMind enrichment.
 type EnrichedServer struct {
-	ID                      string         `json:"id"`
-	Hostname                string         `json:"hostname,omitempty"`
-	IP                      string         `json:"ip,omitempty"`
-	CountryShort            string         `json:"countryshort"`
-	CountryLong             string         `json:"countrylong"`
-	Ping                    string         `json:"ping,omitempty"`
-	Speed                   string         `json:"speed,omitempty"`
-	Status                  string         `json:"status"`
-	FirstSeen               int64          `json:"firstSeen"`
-	LastSeen                int64          `json:"lastSeen"`
-	LastChanged             int64          `json:"lastChanged"`
-	SeenCount               int            `json:"seenCount"`
-	MissCount               int            `json:"missCount"`
-	ConfigHash              string         `json:"configHash"`
-	ContentHash             string         `json:"contentHash"`
-	ConfigFilename          string         `json:"configFilename,omitempty"`
-	OpenVPNConfigDataBase64 string         `json:"openvpn_configdata_base64,omitempty"`
-	MaxMind                 *MaxMindRecord `json:"maxmind,omitempty"`
+	InputServer
+	MaxMind *MaxMindRecord `json:"maxmind,omitempty"`
 }
 
 type DataInput struct {
@@ -171,25 +157,7 @@ func Enrich(inputPath, outputPath, maxmindDir string) error {
 	enriched := make([]EnrichedServer, 0, len(input.Data.Servers))
 
 	for _, s := range input.Data.Servers {
-		server := EnrichedServer{
-			ID:                      s.ID,
-			Hostname:                s.Hostname,
-			IP:                      s.IP,
-			CountryShort:            s.CountryShort,
-			CountryLong:             s.CountryLong,
-			Ping:                    s.Ping,
-			Speed:                   s.Speed,
-			Status:                  s.Status,
-			FirstSeen:               s.FirstSeen,
-			LastSeen:                s.LastSeen,
-			LastChanged:             s.LastChanged,
-			SeenCount:               s.SeenCount,
-			MissCount:               s.MissCount,
-			ConfigHash:              s.ConfigHash,
-			ContentHash:             s.ContentHash,
-			ConfigFilename:          s.ConfigFilename,
-			OpenVPNConfigDataBase64: s.OpenVPNConfigDataBase64,
-		}
+		server := EnrichedServer{InputServer: s}
 
 		if s.IP != "" {
 			server.MaxMind = buildMaxMindRecord(s.IP, countryReader, cityReader, asnReader)
