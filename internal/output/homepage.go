@@ -26,7 +26,7 @@ func formatSpeedMbps(speed string) string {
 	if err != nil {
 		return "0.00"
 	}
-	return fmt.Sprintf("%.2f", n/10000000)
+	return fmt.Sprintf("%.2f", n/1000000)
 }
 
 func (w *Writer) GenerateHomePage(result *state.MergeResult) error {
