@@ -151,7 +151,7 @@ func runEnrich() {
 		os.Exit(1)
 	}
 
-	if err := maxmind.BuildMihomoConfig(*inputPath, *mihomoOutput); err != nil {
+	if err := maxmind.BuildMihomoConfig(*outputPath, *mihomoOutput); err != nil {
 		fmt.Fprintf(os.Stderr, "Mihomo config generation failed: %v\n", err)
 		os.Exit(1)
 	}

@@ -341,26 +341,27 @@ type openvpnConfig struct {
 	tlsCrypt   string
 }
 
-func BuildMihomoConfig(dataPath, outputPath string) error {
-	// Collect servers from data.json
-	data, err := os.ReadFile(dataPath)
+func BuildMihomoConfig(inputPath, outputPath string) error {
+	// Collect servers from the MaxMind-enriched data file so proxy names can
+	// carry carrier (ASN) information.
+	data, err := os.ReadFile(inputPath)
 	if err != nil {
 		return fmt.Errorf("read data: %w", err)
 	}
 
-	var input DataInput
+	var input DataOutput
 	if err := json.Unmarshal(data, &input); err != nil {
 		return fmt.Errorf("parse data: %w", err)
 	}
 
 	// Also load state file which contains all servers (including inactive)
-	// State file path is derived from data.json path: ../state/servers.json
-	statePath := filepath.Join(filepath.Dir(dataPath), "..", "state", "servers.json")
+	// State file path is derived from the input path: ../state/servers.json
+	statePath := filepath.Join(filepath.Dir(inputPath), "..", "state", "servers.json")
 	stateServers := loadStateServers(statePath)
 
-	// Merge: data.json servers + state servers (state has inactive ones too)
+	// Merge: enriched servers + state servers (state has inactive ones too)
 	seen := make(map[string]bool)
-	merged := make([]InputServer, 0, len(input.Data.Servers)+len(stateServers))
+	merged := make([]EnrichedServer, 0, len(input.Data.Servers)+len(stateServers))
 
 	for _, s := range input.Data.Servers {
 		key := s.ID
@@ -387,7 +388,7 @@ func BuildMihomoConfig(dataPath, outputPath string) error {
 		if key == "" || seen[key] {
 			continue
 		}
-		merged = append(merged, s)
+		merged = append(merged, EnrichedServer{InputServer: s})
 	}
 
 	var sb strings.Builder
@@ -572,7 +573,7 @@ func extractBlock(lines []string, tag string) string {
 	return strings.TrimSpace(content.String())
 }
 
-func buildProxyName(s InputServer) string {
+func buildProxyName(s EnrichedServer) string {
 	country := s.CountryShort
 	if country == "" {
 		country = "XX"
@@ -581,7 +582,23 @@ func buildProxyName(s InputServer) string {
 	if hostname == "" {
 		hostname = s.IP
 	}
+	if asn := proxyASNLabel(s); asn != "" {
+		return fmt.Sprintf("%s %s %s", country, asn, hostname)
+	}
 	return fmt.Sprintf("%s %s", country, hostname)
+}
+
+// proxyASNLabel returns the carrier label (e.g. "ASN2516") for a server,
+// derived from MaxMind ASN data. It returns "" when unavailable so the name
+// falls back to "country hostname".
+func proxyASNLabel(s EnrichedServer) string {
+	if s.MaxMind == nil || s.MaxMind.ASN == nil {
+		return ""
+	}
+	if s.MaxMind.ASN.AutonomousSystemNumber == 0 {
+		return ""
+	}
+	return fmt.Sprintf("ASN%d", s.MaxMind.ASN.AutonomousSystemNumber)
 }
 
 func atomicWriteText(path, content string) error {
