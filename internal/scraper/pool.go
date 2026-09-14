@@ -25,23 +25,15 @@ type Pool struct {
 
 // NewPool creates a worker pool with configured concurrency.
 func NewPool(cfg *config.Config) *Pool {
-	workers := cfg.WorkerCount
-	if workers <= 0 {
-		workers = 1
+	workers := max(cfg.WorkerCount, 1)
+
+	// Cap at CPU count - 1 to leave a core for the main goroutine.
+	maxWorkers := cfg.TotalRequests
+	if numCPU := runtime.NumCPU(); numCPU > 1 {
+		maxWorkers = min(maxWorkers, numCPU-1)
 	}
-	// Cap at CPU count - 1 like the JS version
-	numCPU := runtime.NumCPU()
-	if numCPU > 1 && workers > numCPU-1 {
-		workers = numCPU - 1
-	}
-	// But never go below 1
-	if workers < 1 {
-		workers = 1
-	}
-	// If total requests is small, don't use more workers than needed
-	if cfg.TotalRequests < workers {
-		workers = cfg.TotalRequests
-	}
+	workers = min(max(workers, 1), max(maxWorkers, 1))
+
 	return &Pool{cfg: cfg, workerCount: workers}
 }
 
