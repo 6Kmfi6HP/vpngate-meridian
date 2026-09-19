@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://6kmfi6hp.github.io/vpn-meridian/sitemap.xml

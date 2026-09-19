@@ -1,0 +1,840 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VPN Meridian — Global Free VPN Server Index</title>
+    <meta name="description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs. Updated every 6 hours with GeoIP enrichment.">
+    <meta name="keywords" content="VPN, free VPN, OpenVPN, VPN server list, VPN Gate, proxy, mihomo, GeoIP, global VPN">
+    <meta name="author" content="VPN Meridian">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://6kmfi6hp.github.io/vpn-meridian/">
+    <meta property="og:site_name" content="VPN Meridian">
+    <meta property="og:title" content="VPN Meridian — Global Free VPN Server Index">
+    <meta property="og:description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs. Updated every 6 hours.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://6kmfi6hp.github.io/vpn-meridian/">
+    <meta property="og:image" content="https://6kmfi6hp.github.io/vpn-meridian/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VPN Meridian — Global Free VPN Server Index">
+    <meta name="twitter:description" content="Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs.">
+    <meta name="twitter:image" content="https://6kmfi6hp.github.io/vpn-meridian/og-image.png">
+    <meta name="theme-color" content="#0f766e">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317211d'/%3E%3Cpath d='M18 20h28v8c0 11-5.7 17.7-14 21-8.3-3.3-14-10-14-21z' fill='%230f766e'/%3E%3Cpath d='M26 31h12v5H26z' fill='white'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317211d'/%3E%3Cpath d='M18 20h28v8c0 11-5.7 17.7-14 21-8.3-3.3-14-10-14-21z' fill='%230f766e'/%3E%3Cpath d='M26 31h12v5H26z' fill='white'/%3E%3C/svg%3E">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "VPN Meridian",
+        "url": "https://6kmfi6hp.github.io/vpn-meridian/",
+        "description": "Real-time index of free VPN servers worldwide. Browse, filter, and download OpenVPN configs.",
+        "dateModified": "2026-09-19T15:37:07Z",
+        "publisher": {
+            "@type": "Organization",
+            "name": "VPN Meridian"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Global Free VPN Server Index",
+        "description": "A regularly updated dataset of free VPN servers worldwide, including IP addresses, countries, speeds, and OpenVPN configurations.",
+        "url": "https://6kmfi6hp.github.io/vpn-meridian/json/data.json",
+        "dateModified": "2026-09-19T15:37:07Z",
+        "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "keywords": ["VPN", "free VPN", "OpenVPN", "server list", "proxy"],
+        "distribution": [
+            {
+                "@type": "DataDownload",
+                "name": "Server data (JSON)",
+                "encodingFormat": "application/json",
+                "contentUrl": "https://6kmfi6hp.github.io/vpn-meridian/json/data.json"
+            },
+            {
+                "@type": "DataDownload",
+                "name": "Server data with GeoIP (JSON)",
+                "encodingFormat": "application/json",
+                "contentUrl": "https://6kmfi6hp.github.io/vpn-meridian/json/data.maxmind.json"
+            }
+        ]
+    }
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f6f7f2;
+            --panel: #ffffff;
+            --ink: #17211d;
+            --muted: #5e6a64;
+            --line: #d9ded7;
+            --teal: #0f766e;
+            --teal-dark: #115e59;
+            --amber: #b45309;
+            --red: #b91c1c;
+            --blue: #2563eb;
+            --shadow: 0 18px 45px rgba(31, 41, 35, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            background:
+                linear-gradient(135deg, rgba(15, 118, 110, 0.10), transparent 32%),
+                linear-gradient(315deg, rgba(180, 83, 9, 0.10), transparent 34%),
+                var(--bg);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            border-radius: 8px;
+            background: #17211d;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.15rem, 2.5vw, 1.7rem);
+            line-height: 1.1;
+            letter-spacing: 0;
+        }
+
+        .brand p {
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .nav a,
+        .button {
+            display: inline-flex;
+            min-height: 38px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--ink);
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .button.primary {
+            border-color: var(--teal);
+            background: var(--teal);
+            color: #fff;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+            gap: 24px;
+            align-items: stretch;
+            padding: 30px 0 22px;
+        }
+
+        .hero-copy {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        .eyebrow {
+            margin: 0 0 14px;
+            color: var(--teal-dark);
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero h2 {
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(2.2rem, 7vw, 5.2rem);
+            line-height: 0.98;
+            letter-spacing: 0;
+        }
+
+        .hero-copy p {
+            max-width: 720px;
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: clamp(1rem, 2vw, 1.18rem);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .signal-panel {
+            position: relative;
+            overflow: hidden;
+            min-height: 320px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #10231f;
+            box-shadow: var(--shadow);
+        }
+
+        .signal-panel::before {
+            position: absolute;
+            inset: 0;
+            content: "";
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 34px 34px;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
+        }
+
+        .signal-panel::after {
+            position: absolute;
+            inset: 16px;
+            content: "";
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+        }
+
+        .signal-list {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 10px;
+            padding: 22px;
+        }
+
+        .signal-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px;
+            color: #fff;
+        }
+
+        .signal-row span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .signal-row strong {
+            color: #d9f99d;
+            white-space: nowrap;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            padding: 18px 0 26px;
+        }
+
+        .metric {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.82);
+            padding: 18px;
+        }
+
+        .metric dt {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .metric dd {
+            margin: 0;
+            font-size: clamp(1.6rem, 4vw, 2.5rem);
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 18px;
+            padding-bottom: 36px;
+        }
+
+        .filters,
+        .table-panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 28px rgba(31, 41, 35, 0.08);
+        }
+
+        .filters {
+            align-self: start;
+            padding: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--ink);
+            padding: 8px 10px;
+            font: inherit;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-top: 1px solid var(--line);
+            margin-top: 14px;
+            padding-top: 14px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .table-panel {
+            overflow: hidden;
+        }
+
+        .table-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px solid var(--line);
+            padding: 16px 18px;
+        }
+
+        .table-heading h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            letter-spacing: 0;
+        }
+
+        .table-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--line);
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f1f4ef;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 0.92rem;
+        }
+
+        tbody tr:hover {
+            background: #fbfcf8;
+        }
+
+        .host {
+            max-width: 240px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            border-radius: 999px;
+            background: #e7f6f3;
+            color: var(--teal-dark);
+            padding: 2px 9px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .tag.missing {
+            background: #fff7ed;
+            color: var(--amber);
+        }
+
+        .download {
+            color: var(--blue);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .empty {
+            padding: 36px 18px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        footer {
+            border-top: 1px solid var(--line);
+            padding: 22px 0 34px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .topbar,
+            .hero,
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                display: grid;
+                align-items: start;
+            }
+
+            .nav {
+                justify-content: flex-start;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 560px) {
+            .shell {
+                width: min(100% - 20px, 1180px);
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h2 {
+                font-size: 2.45rem;
+            }
+
+            .table-heading {
+                display: block;
+            }
+
+            .table-heading p {
+                margin-top: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="shell topbar">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">VM</div>
+            <div>
+                <h1>VPN Meridian</h1>
+                <p>Global free VPN server index</p>
+            </div>
+        </div>
+        <nav class="nav" aria-label="Generated output">
+            <a href="json/data.json">JSON</a>
+            <a href="json/changes.json">Changes</a>
+            <a href="mihomo_openvpn.yaml">Mihomo</a>
+            <a href="README.md">README</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="shell hero" aria-labelledby="page-title">
+            <div class="hero-copy">
+                <p class="eyebrow">Last generated 2026-09-19T15:37:07Z</p>
+                <h2 id="page-title">Free VPN servers worldwide, updated every 6 hours.</h2>
+                <p>Browse the live server snapshot, filter by country or speed, and download OpenVPN configs directly.</p>
+                <div class="hero-actions">
+                    <a class="button primary" href="json/data.json">Open data.json</a>
+                    <a class="button" href="configs/">Browse configs</a>
+                </div>
+            </div>
+            <aside class="signal-panel" aria-label="Fastest server preview">
+                <div class="signal-list" id="signal-list">
+                                        <div class="signal-row"><span>JP / vpn595476537</span><strong>2999.87 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / vpn551022111</span><strong>2518.79 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / vpn385071002</span><strong>2443.78 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / vpn177768996</span><strong>2017.25 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / vpn601425201</span><strong>1881.79 Mbps</strong></div>
+                    <div class="signal-row"><span>KR / vpn231774152</span><strong>1828.99 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / vpn332082897</span><strong>1643.14 Mbps</strong></div>
+                    <div class="signal-row"><span>JP / public-vpn-183</span><strong>1497.48 Mbps</strong></div>
+
+                </div>
+            </aside>
+        </section>
+
+        <dl class="shell metrics">
+            <div class="metric">
+                <dt>Published</dt>
+                <dd id="metric-published">984</dd>
+            </div>
+            <div class="metric">
+                <dt>Active</dt>
+                <dd id="metric-active">97</dd>
+            </div>
+            <div class="metric">
+                <dt>Countries</dt>
+                <dd id="metric-countries">7</dd>
+            </div>
+            <div class="metric">
+                <dt>API Calls</dt>
+                <dd id="metric-requests">200</dd>
+            </div>
+        </dl>
+
+        <section class="shell workspace" aria-label="Server browser">
+            <form class="filters" id="filters">
+                <div class="field">
+                    <label for="query">Search</label>
+                    <input id="query" type="search" placeholder="Host, IP, or country">
+                </div>
+                <div class="field">
+                    <label for="country">Country</label>
+                    <select id="country">
+                        <option value="">All countries</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="sort">Sort</label>
+                    <select id="sort">
+                        <option value="speed">Speed, high to low</option>
+                        <option value="ping">Ping, low to high</option>
+                        <option value="country">Country</option>
+                        <option value="host">Hostname</option>
+                    </select>
+                </div>
+                <div class="status-row">
+                    <span id="updated-at">2026-09-19T15:37:07Z</span>
+                    <button class="button" type="reset">Reset</button>
+                </div>
+            </form>
+
+            <section class="table-panel">
+                <div class="table-heading">
+                    <div>
+                        <h3>Published Servers</h3>
+                        <p id="result-count">984 servers loaded</p>
+                    </div>
+                    <a class="button" href="json/data.maxmind.json">MaxMind JSON</a>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hostname</th>
+                                <th>IP</th>
+                                <th>Country</th>
+                                <th>Ping</th>
+                                <th>Speed</th>
+                                <th>Status</th>
+                                <th>Config</th>
+                            </tr>
+                        </thead>
+                        <tbody id="server-rows"></tbody>
+                    </table>
+                    <div class="empty" id="empty-state" hidden>No matching servers.</div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer class="shell">
+        GitHub Actions publishes this directory to the gh-pages branch. Configure the repository Pages source to serve from gh-pages / root.
+    </footer>
+
+    <script>var __initialState = {"servers":[{"id":"vpn595476537-89ee3e7cde","hostname":"vpn595476537","ip":"118.106.229.134","ping":"7","speed":"2999866751","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn551022111-c58ffede27","hostname":"vpn551022111","ip":"219.54.213.227","ping":"4","speed":"2518791156","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn385071002-11f670b05a","hostname":"vpn385071002","ip":"101.140.207.94","ping":"2","speed":"2443780441","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn177768996-2db197823c","hostname":"vpn177768996","ip":"221.44.173.56","ping":"5","speed":"2017247148","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn601425201-56a1eaf82e","hostname":"vpn601425201","ip":"202.122.252.243","ping":"11","speed":"1881787593","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn231774152-e3ea8d5065","hostname":"vpn231774152","ip":"14.32.251.62","ping":"30","speed":"1828992987","countrylong":"Korea Republic of","countryshort":"KR","status":"missing"},{"id":"vpn332082897-0ee3dc3cd3","hostname":"vpn332082897","ip":"221.44.201.239","ping":"15","speed":"1643137233","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-183-95df488981","hostname":"public-vpn-183","ip":"219.100.37.161","ping":"10","speed":"1497480116","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn481415171-2db1239bf5","hostname":"vpn481415171","ip":"110.66.191.52","ping":"2","speed":"1416077070","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-85-4150ab21d6","hostname":"public-vpn-85","ip":"219.100.37.81","ping":"14","speed":"1353087397","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn489423325-179047574a","hostname":"vpn489423325","ip":"58.188.123.235","ping":"4","speed":"1345348225","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-142-782f2f6b89","hostname":"public-vpn-142","ip":"219.100.37.114","ping":"9","speed":"1238125890","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-229-ca0f4df79c","hostname":"public-vpn-229","ip":"219.100.37.217","ping":"20","speed":"1222132544","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-137-1c3cf595cf","hostname":"public-vpn-137","ip":"219.100.37.116","ping":"10","speed":"1096818424","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn954534716-e204ddceae","hostname":"vpn954534716","ip":"220.48.62.246","ping":"8","speed":"1003786731","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn744032933-1bc50dfa34","hostname":"vpn744032933","ip":"90.149.85.59","ping":"3","speed":"980058595","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn720447102-7b0a423389","hostname":"vpn720447102","ip":"175.177.49.22","ping":"3","speed":"979836441","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn330309887-01b0296245","hostname":"vpn330309887","ip":"219.104.140.68","ping":"3","speed":"978903870","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn623602131-8709baa934","hostname":"vpn623602131","ip":"219.104.129.60","ping":"3","speed":"966161027","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn189019752-b8d7f055dd","hostname":"vpn189019752","ip":"131.147.36.66","ping":"3","speed":"965117291","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn611507027-a6970d7478","hostname":"vpn611507027","ip":"219.62.85.155","ping":"3","speed":"961590824","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn405006710-ce51cef4de","hostname":"vpn405006710","ip":"150.249.186.106","ping":"1","speed":"961564033","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn221936620-f7ba57c892","hostname":"vpn221936620","ip":"90.149.132.107","ping":"1","speed":"953649763","countrylong":"Japan","countryshort":"JP","status":"active"},{"id":"vpn549766075-e9d9f7e3ee","hostname":"vpn549766075","ip":"193.114.24.199","ping":"10","speed":"951333763","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-124-d201dcf8cd","hostname":"public-vpn-124","ip":"219.100.37.102","ping":"16","speed":"944446798","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn419941365-6b9f3b535b","hostname":"vpn419941365","ip":"160.86.46.9","ping":"6","speed":"939532032","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn346199217-2812334d04","hostname":"vpn346199217","ip":"221.44.205.161","ping":"6","speed":"938783945","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn475501975-787ac10625","hostname":"vpn475501975","ip":"219.28.138.78","ping":"3","speed":"938215225","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn167234104-146f937253","hostname":"vpn167234104","ip":"39.111.221.149","ping":"1","speed":"936850931","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn549424482-2233a57e71","hostname":"vpn549424482","ip":"36.13.208.196","ping":"2","speed":"935310609","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn384156708-a50d168c27","hostname":"vpn384156708","ip":"133.32.233.192","ping":"13","speed":"933182382","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn809753260-1b7ff918e9","hostname":"vpn809753260","ip":"124.246.174.153","ping":"9","speed":"932970995","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn437883279-dda5ec6b6c","hostname":"vpn437883279","ip":"1.224.195.110","ping":"33","speed":"932322355","countrylong":"Korea Republic of","countryshort":"KR","status":"missing"},{"id":"vpn546794625-c81a1e78e1","hostname":"vpn546794625","ip":"117.55.120.100","ping":"6","speed":"931893632","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-184-8358a52af1","hostname":"public-vpn-184","ip":"219.100.37.162","ping":"8","speed":"922577199","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn630461743-1d728cfaac","hostname":"vpn630461743","ip":"223.133.135.144","ping":"11","speed":"920961640","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn129274101-cddad20110","hostname":"vpn129274101","ip":"133.32.234.238","ping":"5","speed":"917041915","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn814090086-8d9a51d3f8","hostname":"vpn814090086","ip":"221.71.146.229","ping":"6","speed":"916659523","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-119-a1ce312979","hostname":"public-vpn-119","ip":"219.100.37.113","ping":"16","speed":"911035067","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn722828815-db42824aa9","hostname":"vpn722828815","ip":"119.231.2.130","ping":"361","speed":"905402936","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-182-ba67348e23","hostname":"public-vpn-182","ip":"219.100.37.177","ping":"19","speed":"904121241","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn604012320-83292caf7a","hostname":"vpn604012320","ip":"61.26.71.210","ping":"4","speed":"903760011","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn102800483-7361db099c","hostname":"vpn102800483","ip":"124.219.214.107","ping":"6","speed":"901392505","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn551027028-799f803164","hostname":"vpn551027028","ip":"118.240.118.77","ping":"3","speed":"898112028","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn133692637-cbadeb8aca","hostname":"vpn133692637","ip":"219.104.35.195","ping":"2","speed":"896845046","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"public-vpn-51-130e4e62d9","hostname":"public-vpn-51","ip":"219.100.37.13","ping":"26","speed":"893604537","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn714853753-b37132f9cf","hostname":"vpn714853753","ip":"113.155.30.115","ping":"11","speed":"889067040","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn847902032-3673027d5b","hostname":"vpn847902032","ip":"118.105.178.39","ping":"7","speed":"883727078","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn655036513-f9a44a8584","hostname":"vpn655036513","ip":"116.12.3.7","ping":"8","speed":"883475390","countrylong":"Japan","countryshort":"JP","status":"missing"},{"id":"vpn265171772-9a8c5da741","hostname":"vpn265171772","ip":"1.232.152.53","ping":"33","speed":"873271494","countrylong":"Korea Republic of","countryshort":"KR","status":"missing"}],"countries":{"jp":"Japan","kr":"Korea Republic of","mp":"Northern Mariana Islands","ru":"Russian Federation","th":"Thailand","us":"United States","vn":"Viet Nam"},"generatedAt":"2026-09-19T15:37:07Z","statistics":{"publishedServers":984,"activeServers":97,"totalCountries":7,"totalRequests":200}};</script>
+    <script>
+        (function () {
+            var state = __initialState;
+            var elements = {};
+
+            function number(value) {
+                var parsed = Number(value || 0);
+                return Number.isFinite(parsed) ? parsed : 0;
+            }
+
+            function formatSpeed(value) {
+                return (number(value) / 1000000).toFixed(2) + ' Mbps';
+            }
+
+            function text(value) {
+                return value == null || value === '' ? 'N/A' : String(value);
+            }
+
+            function clear(node) {
+                while (node.firstChild) {
+                    node.removeChild(node.firstChild);
+                }
+            }
+
+            function addCell(row, value, className) {
+                var cell = document.createElement('td');
+                if (className) {
+                    cell.className = className;
+                }
+                cell.textContent = text(value);
+                row.appendChild(cell);
+                return cell;
+            }
+
+            function renderCountries() {
+                var current = elements.country.value;
+                var codes = Object.keys(state.countries || {}).sort();
+                clear(elements.country);
+                var allOption = document.createElement('option');
+                allOption.value = '';
+                allOption.textContent = 'All countries';
+                elements.country.appendChild(allOption);
+                codes.forEach(function (code) {
+                    var option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = state.countries[code] + ' (' + code.toUpperCase() + ')';
+                    elements.country.appendChild(option);
+                });
+                elements.country.value = current;
+            }
+
+            function getFilteredServers() {
+                var query = elements.query.value.trim().toLowerCase();
+                var country = elements.country.value.toLowerCase();
+                var sort = elements.sort.value;
+                var servers = state.servers.filter(function (server) {
+                    var serverCountry = String(server.countryshort || '').toLowerCase();
+                    var haystack = [
+                        server.hostname,
+                        server.ip,
+                        server.countryshort,
+                        server.countrylong,
+                        server.status
+                    ].join(' ').toLowerCase();
+                    return (!country || serverCountry === country) && (!query || haystack.indexOf(query) !== -1);
+                });
+
+                servers.sort(function (left, right) {
+                    if (sort === 'ping') {
+                        return number(left.ping) - number(right.ping);
+                    }
+                    if (sort === 'country') {
+                        return String(left.countryshort || '').localeCompare(String(right.countryshort || '')) ||
+                            String(left.hostname || '').localeCompare(String(right.hostname || ''));
+                    }
+                    if (sort === 'host') {
+                        return String(left.hostname || '').localeCompare(String(right.hostname || ''));
+                    }
+                    return number(right.speed) - number(left.speed);
+                });
+
+                return servers;
+            }
+
+            function renderRows() {
+                var servers = getFilteredServers();
+                var visible = servers.slice(0, 300);
+                clear(elements.rows);
+                visible.forEach(function (server) {
+                    var row = document.createElement('tr');
+                    addCell(row, server.hostname || server.id, 'host');
+                    addCell(row, server.ip);
+                    addCell(row, server.countrylong || server.countryshort);
+                    addCell(row, server.ping ? server.ping + ' ms' : 'N/A');
+                    addCell(row, formatSpeed(server.speed));
+                    var statusCell = document.createElement('td');
+                    var tag = document.createElement('span');
+                    tag.className = 'tag ' + String(server.status || 'active').toLowerCase();
+                    tag.textContent = text(server.status || 'active');
+                    statusCell.appendChild(tag);
+                    row.appendChild(statusCell);
+                    var linkCell = document.createElement('td');
+                    var link = document.createElement('a');
+                    link.className = 'download';
+                    link.href = server.configPath || '#';
+                    link.textContent = 'Download';
+                    linkCell.appendChild(link);
+                    row.appendChild(linkCell);
+                    elements.rows.appendChild(row);
+                });
+                elements.empty.hidden = servers.length !== 0;
+                elements.resultCount.textContent = servers.length + ' matching servers' + (servers.length > visible.length ? ', first ' + visible.length + ' shown' : '');
+            }
+
+            function renderMetrics() {
+                elements.published.textContent = state.statistics.publishedServers || state.servers.length;
+                elements.active.textContent = state.statistics.activeServers || state.servers.filter(function (server) {
+                    return server.status === 'active';
+                }).length;
+                elements.countriesMetric.textContent = state.statistics.totalCountries || Object.keys(state.countries || {}).length;
+                elements.requests.textContent = state.statistics.totalRequests || 0;
+                elements.updatedAt.textContent = state.generatedAt;
+            }
+
+            function renderSignals() {
+                var fastest = state.servers.slice().sort(function (left, right) {
+                    return number(right.speed) - number(left.speed);
+                }).slice(0, 8);
+                clear(elements.signals);
+                fastest.forEach(function (server) {
+                    var row = document.createElement('div');
+                    row.className = 'signal-row';
+                    var name = document.createElement('span');
+                    name.textContent = text(server.countryshort) + ' / ' + text(server.hostname || server.ip || server.id);
+                    var speed = document.createElement('strong');
+                    speed.textContent = formatSpeed(server.speed);
+                    row.appendChild(name);
+                    row.appendChild(speed);
+                    elements.signals.appendChild(row);
+                });
+            }
+
+            function render() {
+                renderCountries();
+                renderMetrics();
+                renderSignals();
+                renderRows();
+            }
+
+            function loadData() {
+                fetch('json/data.json', { cache: 'no-store' })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Unable to load data.json');
+                        }
+                        return response.json();
+                    })
+                    .then(function (payload) {
+                        var data = payload.data || {};
+                        state.servers = Array.isArray(data.servers) ? data.servers : state.servers;
+                        state.countries = data.countries || state.countries;
+                        state.generatedAt = payload.generatedAtIso || state.generatedAt;
+                        state.statistics = payload.statistics || state.statistics;
+                        render();
+                    })
+                    .catch(function () {
+                        render();
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                elements.query = document.getElementById('query');
+                elements.country = document.getElementById('country');
+                elements.sort = document.getElementById('sort');
+                elements.rows = document.getElementById('server-rows');
+                elements.empty = document.getElementById('empty-state');
+                elements.resultCount = document.getElementById('result-count');
+                elements.published = document.getElementById('metric-published');
+                elements.active = document.getElementById('metric-active');
+                elements.countriesMetric = document.getElementById('metric-countries');
+                elements.requests = document.getElementById('metric-requests');
+                elements.updatedAt = document.getElementById('updated-at');
+                elements.signals = document.getElementById('signal-list');
+
+                elements.query.addEventListener('input', renderRows);
+                elements.country.addEventListener('change', renderRows);
+                elements.sort.addEventListener('change', renderRows);
+                document.getElementById('filters').addEventListener('reset', function () {
+                    window.setTimeout(renderRows, 0);
+                });
+
+                render();
+                loadData();
+            });
+        }());
+    </script>
+</body>
+</html>
+
